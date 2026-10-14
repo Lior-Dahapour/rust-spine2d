@@ -1,0 +1,7 @@
+clip.png
+	size: 128, 128
+	filter: Linear, Linear
+r1
+	bounds: 0, 0, 64, 64
+r2
+	bounds: 64, 0, 64, 64

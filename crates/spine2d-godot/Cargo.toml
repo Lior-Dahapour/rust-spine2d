@@ -1,0 +1,22 @@
+[package]
+name = "spine2d-godot"
+version.workspace = true
+edition.workspace = true
+publish = false
+license-file.workspace = true
+description = "Godot 4 extension for the Spine 4.3 Rust runtime"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+spine2d-core = { path = "../spine2d-core" }
+spine2d-render = { path = "../spine2d-render" }
+godot = { version = "0.5.5", features = ["api-4-5", "experimental-threads"] }
+bytemuck = "1"
+smallvec = "1.16.3"
+
+[features]
+# Times the pose, render and upload phases of every sprite (see `SpineSprite.take_timings`). Off by
+# default so release builds do not read the clock.
+profiling = []

@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = ["crates/spine2d-core", "crates/spine2d-render", "crates/spine2d-godot"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license-file = "LICENSE-SPINE"
+description = "Rust port of the Spine 4.3 runtime"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1

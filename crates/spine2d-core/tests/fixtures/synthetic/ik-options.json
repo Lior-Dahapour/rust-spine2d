@@ -1,0 +1,756 @@
+{
+ "bones": [
+  {
+   "name": "root"
+  },
+  {
+   "name": "a1",
+   "parent": "root",
+   "x": -200,
+   "y": 100,
+   "length": 100,
+   "rotation": 0
+  },
+  {
+   "name": "a2",
+   "parent": "a1",
+   "x": 100,
+   "length": 100
+  },
+  {
+   "name": "ta",
+   "parent": "root",
+   "x": -80,
+   "y": 160
+  },
+  {
+   "name": "b1",
+   "parent": "root",
+   "x": 100,
+   "y": -100,
+   "length": 80,
+   "rotation": 20,
+   "scaleX": 1.0
+  },
+  {
+   "name": "b2",
+   "parent": "b1",
+   "x": 80,
+   "length": 70,
+   "scaleX": -1
+  },
+  {
+   "name": "tb",
+   "parent": "root",
+   "x": 220,
+   "y": -40
+  },
+  {
+   "name": "e1",
+   "parent": "root",
+   "x": -200,
+   "y": -150,
+   "length": 90,
+   "rotation": 0,
+   "scaleX": 1.5,
+   "scaleY": 0.8
+  },
+  {
+   "name": "e2",
+   "parent": "e1",
+   "x": 90,
+   "length": 90
+  },
+  {
+   "name": "te",
+   "parent": "root",
+   "x": -80,
+   "y": -90
+  },
+  {
+   "name": "f1",
+   "parent": "root",
+   "x": 50,
+   "y": 150,
+   "length": 70,
+   "rotation": 0
+  },
+  {
+   "name": "f2",
+   "parent": "f1",
+   "x": 70,
+   "length": 70
+  },
+  {
+   "name": "tf",
+   "parent": "root",
+   "x": 170,
+   "y": 210
+  },
+  {
+   "name": "c1",
+   "parent": "root",
+   "x": -100,
+   "y": -250,
+   "length": 90
+  },
+  {
+   "name": "tc",
+   "parent": "root",
+   "x": 0,
+   "y": -250
+  },
+  {
+   "name": "d1",
+   "parent": "root",
+   "x": 150,
+   "y": -250,
+   "length": 90,
+   "scaleX": -1
+  },
+  {
+   "name": "td",
+   "parent": "root",
+   "x": 250,
+   "y": -250
+  },
+  {
+   "name": "g1",
+   "parent": "root",
+   "x": -250,
+   "y": 0,
+   "length": 60,
+   "inherit": "noScale"
+  },
+  {
+   "name": "g2",
+   "parent": "g1",
+   "x": 60,
+   "length": 60,
+   "inherit": "onlyTranslation"
+  },
+  {
+   "name": "tg",
+   "parent": "root",
+   "x": -150,
+   "y": 0
+  },
+  {
+   "name": "h1",
+   "parent": "root",
+   "x": 250,
+   "y": 100,
+   "length": 60,
+   "scaleX": 2.0,
+   "scaleY": 0.5
+  },
+  {
+   "name": "h2",
+   "parent": "h1",
+   "x": 60,
+   "length": 60
+  },
+  {
+   "name": "th",
+   "parent": "root",
+   "x": 250,
+   "y": 160
+  },
+  {
+   "name": "k1",
+   "parent": "root",
+   "x": -60,
+   "y": -60,
+   "length": 100
+  },
+  {
+   "name": "k2",
+   "parent": "k1",
+   "x": 100,
+   "length": 40
+  },
+  {
+   "name": "tk",
+   "parent": "root",
+   "x": -40,
+   "y": -50
+  },
+  {
+   "name": "d2",
+   "parent": "root",
+   "x": 220,
+   "y": -150,
+   "length": 90
+  },
+  {
+   "name": "td2",
+   "parent": "root",
+   "x": 240,
+   "y": -140
+  },
+  {
+   "name": "mp",
+   "parent": "root",
+   "x": -280,
+   "y": -60,
+   "rotation": 30,
+   "scaleX": 1.3
+  },
+  {
+   "name": "m1",
+   "parent": "mp",
+   "x": 40,
+   "length": 50,
+   "inherit": "onlyTranslation"
+  },
+  {
+   "name": "tm",
+   "parent": "root",
+   "x": -200,
+   "y": -90
+  },
+  {
+   "name": "np",
+   "parent": "root",
+   "x": -300,
+   "y": 60,
+   "rotation": 40,
+   "scaleX": 1.4,
+   "scaleY": 0.9
+  },
+  {
+   "name": "n1",
+   "parent": "np",
+   "x": 40,
+   "length": 50,
+   "inherit": "noRotationOrReflection"
+  },
+  {
+   "name": "tn",
+   "parent": "root",
+   "x": -220,
+   "y": 70
+  }
+ ],
+ "slots": [],
+ "constraints": [
+  {
+   "name": "ikA",
+   "type": "ik",
+   "bones": [
+    "a1",
+    "a2"
+   ],
+   "target": "ta",
+   "mix": 1,
+   "softness": 30,
+   "bendPositive": true
+  },
+  {
+   "name": "ikB",
+   "type": "ik",
+   "bones": [
+    "b1",
+    "b2"
+   ],
+   "target": "tb",
+   "mix": 0.7,
+   "bendPositive": false
+  },
+  {
+   "name": "ikE",
+   "type": "ik",
+   "bones": [
+    "e1",
+    "e2"
+   ],
+   "target": "te",
+   "mix": 1,
+   "softness": 10
+  },
+  {
+   "name": "ikF",
+   "type": "ik",
+   "bones": [
+    "f1",
+    "f2"
+   ],
+   "target": "tf",
+   "stretch": true,
+   "scaleY": "uniform",
+   "mix": 0.9
+  },
+  {
+   "name": "ikC",
+   "type": "ik",
+   "bones": [
+    "c1"
+   ],
+   "target": "tc",
+   "compress": true,
+   "stretch": true,
+   "scaleY": "uniform"
+  },
+  {
+   "name": "ikD",
+   "type": "ik",
+   "bones": [
+    "d1"
+   ],
+   "target": "td",
+   "stretch": true,
+   "scaleY": "volume",
+   "mix": 0.8
+  },
+  {
+   "name": "ikG",
+   "type": "ik",
+   "bones": [
+    "g1"
+   ],
+   "target": "tg",
+   "stretch": true
+  },
+  {
+   "name": "ikH",
+   "type": "ik",
+   "bones": [
+    "h1",
+    "h2"
+   ],
+   "target": "th",
+   "mix": 1
+  },
+  {
+   "name": "ikK",
+   "type": "ik",
+   "bones": [
+    "k1",
+    "k2"
+   ],
+   "target": "tk",
+   "mix": 1
+  },
+  {
+   "name": "ikD2",
+   "type": "ik",
+   "bones": [
+    "d2"
+   ],
+   "target": "td2",
+   "compress": true,
+   "scaleY": "volume"
+  },
+  {
+   "name": "ikM",
+   "type": "ik",
+   "bones": [
+    "m1"
+   ],
+   "target": "tm",
+   "stretch": true
+  },
+  {
+   "name": "ikN",
+   "type": "ik",
+   "bones": [
+    "n1"
+   ],
+   "target": "tn",
+   "stretch": true
+  }
+ ],
+ "animations": {
+  "reach": {
+   "bones": {
+    "ta": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": 80,
+       "y": 60,
+       "curve": [
+        0.25,
+        0.0,
+        0.75,
+        1.0,
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "time": 2,
+       "x": -80,
+       "y": -60
+      }
+     ]
+    },
+    "tb": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": -60,
+       "y": 90,
+       "curve": [
+        0.25,
+        0.0,
+        0.75,
+        1.0,
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "time": 2,
+       "x": 60,
+       "y": -90
+      }
+     ]
+    },
+    "te": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": 100,
+       "y": 40,
+       "curve": [
+        0.25,
+        0.0,
+        0.75,
+        1.0,
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "time": 2,
+       "x": -100,
+       "y": -40
+      }
+     ]
+    },
+    "tf": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": 200,
+       "y": 100,
+       "curve": [
+        0.25,
+        0.0,
+        0.75,
+        1.0,
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "time": 2,
+       "x": -200,
+       "y": -100
+      }
+     ]
+    },
+    "tc": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0
+      },
+      {
+       "time": 1,
+       "x": -60,
+       "y": 0
+      },
+      {
+       "time": 2,
+       "x": 120,
+       "y": 30
+      }
+     ]
+    },
+    "td": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0
+      },
+      {
+       "time": 1,
+       "x": -40,
+       "y": 60,
+       "curve": "stepped"
+      },
+      {
+       "time": 2,
+       "x": 90,
+       "y": -10
+      }
+     ]
+    },
+    "tg": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0
+      },
+      {
+       "time": 1,
+       "x": -80,
+       "y": 50
+      },
+      {
+       "time": 2,
+       "x": 40,
+       "y": -40
+      }
+     ]
+    },
+    "th": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": 300,
+       "y": 120,
+       "curve": [
+        0.25,
+        0.0,
+        0.75,
+        1.0,
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "time": 2,
+       "x": -250,
+       "y": -60
+      }
+     ]
+    },
+    "tk": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": 30,
+       "y": 30
+      },
+      {
+       "time": 2,
+       "x": -250,
+       "y": -100
+      }
+     ]
+    },
+    "td2": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0
+      },
+      {
+       "time": 1,
+       "x": -80,
+       "y": 10
+      },
+      {
+       "time": 2,
+       "x": 60,
+       "y": -30
+      }
+     ]
+    },
+    "tm": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": 120,
+       "y": 60
+      },
+      {
+       "time": 2,
+       "x": -60,
+       "y": -40
+      }
+     ]
+    },
+    "tn": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": 130,
+       "y": -50
+      },
+      {
+       "time": 2,
+       "x": -40,
+       "y": 40
+      }
+     ]
+    }
+   }
+  },
+  "mix": {
+   "ik": {
+    "ikA": [
+     {
+      "time": 0,
+      "mix": 1,
+      "softness": 30,
+      "bendPositive": true
+     },
+     {
+      "time": 1,
+      "mix": 0.3,
+      "softness": 0,
+      "bendPositive": false,
+      "curve": [
+       0.25,
+       0.0,
+       0.75,
+       1.0,
+       0.25,
+       0.0,
+       0.75,
+       1.0
+      ]
+     },
+     {
+      "time": 2,
+      "mix": 1,
+      "softness": 20,
+      "bendPositive": true,
+      "compress": false,
+      "stretch": true
+     }
+    ],
+    "ikC": [
+     {
+      "time": 0,
+      "mix": 0
+     },
+     {
+      "time": 1,
+      "mix": 1,
+      "stretch": false,
+      "compress": true
+     },
+     {
+      "time": 2,
+      "mix": 0.5,
+      "stretch": true
+     }
+    ]
+   },
+   "bones": {
+    "ta": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": 40,
+       "y": -80,
+       "curve": [
+        0.25,
+        0.0,
+        0.75,
+        1.0,
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "time": 2,
+       "x": -40,
+       "y": 80
+      }
+     ]
+    },
+    "tc": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0
+      },
+      {
+       "time": 2,
+       "x": 50
+      }
+     ]
+    }
+   }
+  }
+ },
+ "skeleton": {
+  "hash": "ik-options",
+  "spine": "4.3.0",
+  "x": -300,
+  "y": -300,
+  "width": 600,
+  "height": 600,
+  "referenceScale": 100,
+  "fps": 30
+ },
+ "skins": [
+  {
+   "name": "default",
+   "attachments": {}
+  }
+ ]
+}

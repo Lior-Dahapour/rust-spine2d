@@ -1,0 +1,460 @@
+{
+ "bones": [
+  {
+   "name": "root"
+  },
+  {
+   "name": "dws",
+   "parent": "root",
+   "x": 200,
+   "y": -150,
+   "length": 70
+  },
+  {
+   "name": "dw",
+   "parent": "root",
+   "x": 250,
+   "y": -100,
+   "length": 70
+  },
+  {
+   "name": "driver",
+   "parent": "root",
+   "x": -100,
+   "y": -100,
+   "length": 60
+  },
+  {
+   "name": "w1",
+   "parent": "root",
+   "x": -150,
+   "y": 100,
+   "length": 80
+  },
+  {
+   "name": "w2",
+   "parent": "w1",
+   "x": 80,
+   "length": 70
+  },
+  {
+   "name": "w3",
+   "parent": "root",
+   "x": 100,
+   "y": 100,
+   "length": 60
+  },
+  {
+   "name": "w4",
+   "parent": "root",
+   "x": 150,
+   "y": -50,
+   "length": 50
+  },
+  {
+   "name": "ikt",
+   "parent": "root",
+   "x": 0,
+   "y": 200
+  },
+  {
+   "name": "ik1",
+   "parent": "root",
+   "x": -50,
+   "y": 100,
+   "length": 60
+  },
+  {
+   "name": "ik2",
+   "parent": "ik1",
+   "x": 60,
+   "length": 60
+  }
+ ],
+ "slots": [
+  {
+   "name": "s",
+   "bone": "w1",
+   "attachment": "pa"
+  }
+ ],
+ "constraints": [
+  {
+   "name": "ikS",
+   "type": "ik",
+   "bones": [
+    "ik1",
+    "ik2"
+   ],
+   "target": "ikt",
+   "mix": 0.4
+  },
+  {
+   "name": "tcw",
+   "type": "transform",
+   "source": "dws",
+   "bones": [
+    "dw"
+   ],
+   "mixRotate": 1,
+   "mixX": 0.5,
+   "properties": {
+    "rotate": {
+     "to": {
+      "rotate": {
+       "scale": 1
+      }
+     }
+    },
+    "x": {
+     "to": {
+      "x": {
+       "scale": 0.5
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "plocal",
+   "type": "slider",
+   "animation": "waveAnim",
+   "bone": "dw",
+   "property": "rotate",
+   "from": 0,
+   "to": 0,
+   "scale": 0.02,
+   "local": true,
+   "mix": 0.5,
+   "additive": true
+  },
+  {
+   "name": "wave",
+   "type": "slider",
+   "animation": "waveAnim",
+   "bone": "driver",
+   "property": "x",
+   "from": -100,
+   "to": 0,
+   "scale": 0.01,
+   "mix": 1,
+   "max": 100
+  },
+  {
+   "name": "pulse",
+   "type": "slider",
+   "animation": "pulseAnim",
+   "bone": "driver",
+   "property": "rotate",
+   "from": 0,
+   "to": 0,
+   "scale": 0.02,
+   "local": true,
+   "loop": true,
+   "mix": 0.8,
+   "additive": true
+  },
+  {
+   "name": "timed",
+   "type": "slider",
+   "animation": "timedAnim",
+   "time": 0.5,
+   "mix": 0.6,
+   "additive": true
+  }
+ ],
+ "animations": {
+  "waveAnim": {
+   "bones": {
+    "w1": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 0
+      },
+      {
+       "time": 1,
+       "value": 60,
+       "curve": [
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "time": 2,
+       "value": -20
+      }
+     ],
+     "scale": [
+      {
+       "time": 0,
+       "x": 1,
+       "y": 1
+      },
+      {
+       "time": 2,
+       "x": 1.2,
+       "y": 0.8
+      }
+     ]
+    },
+    "w2": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 0
+      },
+      {
+       "time": 2,
+       "value": 45
+      }
+     ]
+    }
+   },
+   "slots": {
+    "s": {
+     "rgba": [
+      {
+       "time": 0,
+       "color": "ffffffff"
+      },
+      {
+       "time": 2,
+       "color": "ff000080"
+      }
+     ],
+     "attachment": [
+      {
+       "time": 0,
+       "name": "pa"
+      },
+      {
+       "time": 1,
+       "name": "pb"
+      }
+     ]
+    }
+   },
+   "ik": {
+    "ikS": [
+     {
+      "time": 0,
+      "mix": 0
+     },
+     {
+      "time": 2,
+      "mix": 1
+     }
+    ]
+   }
+  },
+  "pulseAnim": {
+   "bones": {
+    "w3": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": 30,
+       "y": -20
+      },
+      {
+       "time": 2,
+       "x": 0,
+       "y": 0
+      }
+     ],
+     "rotate": [
+      {
+       "time": 0,
+       "value": 0
+      },
+      {
+       "time": 2,
+       "value": 90
+      }
+     ]
+    }
+   }
+  },
+  "timedAnim": {
+   "bones": {
+    "w4": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 0
+      },
+      {
+       "time": 1,
+       "value": 30
+      },
+      {
+       "time": 2,
+       "value": -30
+      }
+     ],
+     "scale": [
+      {
+       "time": 0,
+       "x": 1,
+       "y": 1
+      },
+      {
+       "time": 2,
+       "x": 0.5,
+       "y": 1.5
+      }
+     ]
+    }
+   }
+  },
+  "drive": {
+   "bones": {
+    "driver": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 1,
+       "x": 200,
+       "y": 0,
+       "curve": [
+        0.25,
+        0.0,
+        0.75,
+        1.0,
+        0.25,
+        0.0,
+        0.75,
+        1.0
+       ]
+      },
+      {
+       "time": 2,
+       "x": 60,
+       "y": 0
+      }
+     ],
+     "rotate": [
+      {
+       "time": 0,
+       "value": 0
+      },
+      {
+       "time": 2,
+       "value": 180
+      }
+     ]
+    },
+    "ikt": {
+     "translate": [
+      {
+       "time": 0,
+       "x": 0
+      },
+      {
+       "time": 2,
+       "x": 100,
+       "y": -60
+      }
+     ]
+    },
+    "dws": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 0
+      },
+      {
+       "time": 1,
+       "value": 70
+      },
+      {
+       "time": 2,
+       "value": -50
+      }
+     ],
+     "translate": [
+      {
+       "time": 0,
+       "x": 0,
+       "y": 0
+      },
+      {
+       "time": 2,
+       "x": 40,
+       "y": -30
+      }
+     ]
+    }
+   },
+   "slider": {
+    "timed": {
+     "time": [
+      {
+       "time": 0,
+       "value": 0
+      },
+      {
+       "time": 1,
+       "value": 1.0
+      },
+      {
+       "time": 2,
+       "value": 0.2
+      }
+     ],
+     "mix": [
+      {
+       "time": 0,
+       "value": 1
+      },
+      {
+       "time": 2,
+       "value": 0.3
+      }
+     ]
+    }
+   }
+  }
+ },
+ "skeleton": {
+  "hash": "slider-options",
+  "spine": "4.3.0",
+  "x": -300,
+  "y": -300,
+  "width": 600,
+  "height": 600,
+  "referenceScale": 100,
+  "fps": 30
+ },
+ "skins": [
+  {
+   "name": "default",
+   "attachments": {
+    "s": {
+     "pa": {
+      "type": "point",
+      "x": 10,
+      "y": 5
+     },
+     "pb": {
+      "type": "point",
+      "x": -10,
+      "y": 15
+     }
+    }
+   }
+  }
+ ]
+}

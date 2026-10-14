@@ -1,0 +1,12 @@
+config_version=5
+
+[application]
+config/name="spine2d-test"
+run/main_scene="res://shot.tscn"
+
+[display]
+window/size/viewport_width=900
+window/size/viewport_height=700
+
+[rendering]
+renderer/rendering_method="gl_compatibility"

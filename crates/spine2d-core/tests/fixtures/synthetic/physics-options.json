@@ -1,0 +1,359 @@
+{
+ "bones": [
+  {
+   "name": "root"
+  },
+  {
+   "name": "p0",
+   "parent": "root",
+   "x": -270,
+   "y": 100,
+   "length": 80,
+   "rotation": -90
+  },
+  {
+   "name": "p1",
+   "parent": "root",
+   "x": -180,
+   "y": 100,
+   "length": 80,
+   "rotation": -90
+  },
+  {
+   "name": "p2",
+   "parent": "root",
+   "x": -90,
+   "y": 100,
+   "length": 80,
+   "rotation": -90
+  },
+  {
+   "name": "p3",
+   "parent": "root",
+   "x": 0,
+   "y": 100,
+   "length": 80,
+   "rotation": -90
+  },
+  {
+   "name": "p4",
+   "parent": "root",
+   "x": 90,
+   "y": 100,
+   "length": 80,
+   "rotation": -90
+  },
+  {
+   "name": "p5",
+   "parent": "root",
+   "x": 180,
+   "y": 100,
+   "length": 80,
+   "rotation": -90
+  },
+  {
+   "name": "p6",
+   "parent": "root",
+   "x": 270,
+   "y": 100,
+   "length": 80,
+   "rotation": -90
+  }
+ ],
+ "slots": [],
+ "constraints": [
+  {
+   "name": "ph0",
+   "type": "physics",
+   "bone": "p0",
+   "x": 1,
+   "y": 1,
+   "inertia": 0.7,
+   "strength": 60,
+   "damping": 0.8,
+   "mass": 1.5,
+   "wind": 0.2,
+   "gravity": 0.6,
+   "mix": 1,
+   "limit": 80
+  },
+  {
+   "name": "ph1",
+   "type": "physics",
+   "bone": "p1",
+   "rotate": 1,
+   "inertia": 0.5,
+   "strength": 80,
+   "damping": 0.9,
+   "mass": 1,
+   "gravity": 1,
+   "mix": 0.8,
+   "fps": 30
+  },
+  {
+   "name": "ph2",
+   "type": "physics",
+   "bone": "p2",
+   "shearX": 0.8,
+   "rotate": 0.5,
+   "inertia": 0.6,
+   "strength": 100,
+   "damping": 0.85,
+   "wind": 0.5,
+   "windGlobal": true,
+   "mix": 1
+  },
+  {
+   "name": "ph3",
+   "type": "physics",
+   "bone": "p3",
+   "scaleX": 0.5,
+   "scaleY": "uniform",
+   "inertia": 0.4,
+   "strength": 70,
+   "damping": 0.9,
+   "gravity": 0.8,
+   "gravityGlobal": true,
+   "mix": 1
+  },
+  {
+   "name": "ph4",
+   "type": "physics",
+   "bone": "p4",
+   "scaleX": 0.4,
+   "scaleY": "volume",
+   "rotate": 1,
+   "x": 0.5,
+   "inertia": 0.5,
+   "strength": 90,
+   "damping": 0.88,
+   "massGlobal": true,
+   "inertiaGlobal": true,
+   "mix": 0.9,
+   "fps": 120
+  },
+  {
+   "name": "ph6",
+   "type": "physics",
+   "bone": "p6",
+   "scaleX": 8,
+   "scaleY": "volume",
+   "x": 1,
+   "inertia": 0.9,
+   "strength": 30,
+   "damping": 0.95,
+   "mass": 0.5,
+   "mix": 1
+  },
+  {
+   "name": "ph5",
+   "type": "physics",
+   "bone": "p5",
+   "x": 1,
+   "y": 1,
+   "rotate": 1,
+   "shearX": 0.3,
+   "scaleX": 0.3,
+   "inertia": 0.5,
+   "strength": 50,
+   "damping": 0.8,
+   "mixGlobal": true,
+   "strengthGlobal": true,
+   "dampingGlobal": true,
+   "mix": 1
+  }
+ ],
+ "animations": {
+  "sway": {
+   "physics": {
+    "ph1": {
+     "inertia": [
+      {
+       "time": 0,
+       "value": 0.5
+      },
+      {
+       "time": 1,
+       "value": 0.9
+      }
+     ],
+     "strength": [
+      {
+       "time": 0,
+       "value": 80
+      },
+      {
+       "time": 2,
+       "value": 20
+      }
+     ],
+     "damping": [
+      {
+       "time": 0,
+       "value": 0.9
+      },
+      {
+       "time": 2,
+       "value": 0.7
+      }
+     ],
+     "mass": [
+      {
+       "time": 0,
+       "value": 1
+      },
+      {
+       "time": 2,
+       "value": 3
+      }
+     ],
+     "wind": [
+      {
+       "time": 0,
+       "value": 0
+      },
+      {
+       "time": 1,
+       "value": 2
+      },
+      {
+       "time": 2,
+       "value": 0
+      }
+     ],
+     "gravity": [
+      {
+       "time": 0,
+       "value": 1
+      },
+      {
+       "time": 2,
+       "value": -1
+      }
+     ],
+     "mix": [
+      {
+       "time": 0,
+       "value": 1
+      },
+      {
+       "time": 2,
+       "value": 0.4
+      }
+     ]
+    },
+    "": {
+     "wind": [
+      {
+       "time": 0,
+       "value": 0
+      },
+      {
+       "time": 1,
+       "value": 3
+      }
+     ],
+     "gravity": [
+      {
+       "time": 0,
+       "value": 0.5
+      },
+      {
+       "time": 2,
+       "value": 1.5
+      }
+     ],
+     "mix": [
+      {
+       "time": 0,
+       "value": 1
+      },
+      {
+       "time": 1,
+       "value": 0.5
+      }
+     ],
+     "inertia": [
+      {
+       "time": 0,
+       "value": 0.5
+      },
+      {
+       "time": 2,
+       "value": 0.9
+      }
+     ],
+     "mass": [
+      {
+       "time": 0,
+       "value": 1
+      },
+      {
+       "time": 2,
+       "value": 2
+      }
+     ],
+     "strength": [
+      {
+       "time": 0,
+       "value": 50
+      },
+      {
+       "time": 2,
+       "value": 120
+      }
+     ],
+     "damping": [
+      {
+       "time": 0,
+       "value": 0.8
+      },
+      {
+       "time": 2,
+       "value": 0.9
+      }
+     ],
+     "reset": [
+      {
+       "time": 1.0
+      }
+     ]
+    }
+   },
+   "bones": {
+    "p0": {
+     "rotate": [
+      {
+       "time": 0,
+       "value": 0
+      },
+      {
+       "time": 1,
+       "value": 40
+      },
+      {
+       "time": 2,
+       "value": -40
+      }
+     ]
+    }
+   }
+  }
+ },
+ "skeleton": {
+  "hash": "physics-options",
+  "spine": "4.3.0",
+  "x": -300,
+  "y": -300,
+  "width": 600,
+  "height": 600,
+  "referenceScale": 100,
+  "fps": 30
+ },
+ "skins": [
+  {
+   "name": "default",
+   "attachments": {}
+  }
+ ]
+}

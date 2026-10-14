@@ -1,0 +1,16 @@
+# Spine example art, built extensions, copies of the shared files and export output stay out of git.
+/build/
+/official/assets/
+/official/bin/
+/official/.godot/
+/official/bench.gd
+/official/bench.gd.uid
+/official/bench.tscn
+/official/export_presets.cfg
+/ours/assets/
+/ours/addons/
+/ours/.godot/
+/ours/bench.gd
+/ours/bench.gd.uid
+/ours/bench.tscn
+/ours/export_presets.cfg

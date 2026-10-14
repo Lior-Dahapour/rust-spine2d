@@ -1,0 +1,172 @@
+{
+ "skeleton": {
+  "spine": "4.3.0"
+ },
+ "bones": [
+  {
+   "name": "root"
+  },
+  {
+   "name": "spin",
+   "parent": "root",
+   "x": 20,
+   "y": 10
+  }
+ ],
+ "slots": [
+  {
+   "name": "c",
+   "bone": "spin",
+   "attachment": "c"
+  },
+  {
+   "name": "body",
+   "bone": "root",
+   "attachment": "r1",
+   "color": "ffcc99ff",
+   "dark": "336699"
+  },
+  {
+   "name": "mesh",
+   "bone": "root",
+   "attachment": "m1",
+   "blend": "additive",
+   "color": "88ff88c0"
+  },
+  {
+   "name": "box",
+   "bone": "spin",
+   "attachment": "bb"
+  }
+ ],
+ "skins": [
+  {
+   "name": "default",
+   "attachments": {
+    "c": {
+     "c": {
+      "type": "clipping",
+      "end": "mesh",
+      "vertexCount": 10,
+      "vertices": [
+       0,
+       100,
+       25,
+       30,
+       95,
+       30,
+       40,
+       -10,
+       60,
+       -80,
+       0,
+       -35,
+       -60,
+       -80,
+       -40,
+       -10,
+       -95,
+       30,
+       -25,
+       30
+      ],
+      "inverse": true
+     }
+    },
+    "body": {
+     "r1": {
+      "type": "region",
+      "name": "r1",
+      "x": 10,
+      "y": 0,
+      "width": 220,
+      "height": 160,
+      "rotation": 15
+     }
+    },
+    "mesh": {
+     "m1": {
+      "type": "mesh",
+      "name": "r2",
+      "uvs": [
+       0,
+       0,
+       1,
+       0,
+       1,
+       1,
+       0,
+       1,
+       0.5,
+       0.5
+      ],
+      "triangles": [
+       0,
+       1,
+       4,
+       1,
+       2,
+       4,
+       2,
+       3,
+       4,
+       3,
+       0,
+       4
+      ],
+      "vertices": [
+       -110,
+       -90,
+       110,
+       -90,
+       110,
+       90,
+       -110,
+       90,
+       0,
+       0
+      ],
+      "hull": 4
+     }
+    },
+    "box": {
+     "bb": {
+      "type": "boundingbox",
+      "vertexCount": 4,
+      "vertices": [
+       -40,
+       -40,
+       40,
+       -40,
+       40,
+       40,
+       -40,
+       40
+      ]
+     }
+    }
+   }
+  }
+ ],
+ "animations": {
+  "spin": {
+   "bones": {
+    "spin": {
+     "rotate": [
+      {
+       "value": 0
+      },
+      {
+       "time": 1,
+       "value": 120
+      },
+      {
+       "time": 2,
+       "value": 360
+      }
+     ]
+    }
+   }
+  }
+ }
+}

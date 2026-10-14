@@ -1,0 +1,5 @@
+target
+
+# Editor and OS files
+.idea/
+.DS_Store
