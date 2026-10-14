@@ -1,13 +1,10 @@
-# Builds the Godot addon for Linux (x86_64) and Windows (x86_64) on every push to main that changes
-# the code, and merges the libraries into one addon folder (artifact "rust-spine2d-addon", with the
-# `addons` folder at its root).
+# Builds the Godot addon for Linux (x86_64), Windows (x86_64) and macOS (universal, arm64 and
+# x86_64) on every push to main that changes the code, and merges the libraries into one addon
+# folder (artifact "rust-spine2d-addon", with the `addons` folder at its root). It can also be
+# started by hand from the Actions tab.
 #
-# The macOS library is built only on request (Actions tab, "Run workflow", tick the box), because
-# macOS minutes count ten times on private repositories. You can also build it on a Mac with
-# crates/spine2d-godot/package.sh and add it to the addon by hand.
-#
-# This workflow has not run yet. It was written alongside package.sh, which has only been run on
-# macOS arm64, so expect to fix small things after the first run.
+# Linux arm64 is not built here: the extension file points x86_64 and arm64 at the same file name,
+# so build that one on an ARM machine with crates/spine2d-godot/package.sh.
 name: godot-addon
 
 on:
@@ -19,18 +16,13 @@ on:
       - "Cargo.lock"
       - ".github/workflows/godot-addon.yml"
   workflow_dispatch:
-    inputs:
-      macos:
-        description: Also build the macOS library (universal, arm64 and x86_64)
-        type: boolean
-        default: false
 
 jobs:
   build:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -38,6 +30,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Add the Intel and Apple silicon targets (the macOS library is universal)
+        if: runner.os == 'macOS'
+        run: rustup target add x86_64-apple-darwin aarch64-apple-darwin
       - name: Build and package
         run: sh crates/spine2d-godot/package.sh --out out
       - uses: actions/upload-artifact@v4
@@ -45,24 +40,8 @@ jobs:
           name: addon-${{ matrix.os }}
           path: out
 
-  build-macos:
-    if: ${{ inputs.macos }}
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Add the Intel target (the macOS library is universal)
-        run: rustup target add x86_64-apple-darwin aarch64-apple-darwin
-      - name: Build and package
-        run: sh crates/spine2d-godot/package.sh --out out
-      - uses: actions/upload-artifact@v4
-        with:
-          name: addon-macos-latest
-          path: out
-
   merge:
-    needs: [build, build-macos]
-    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4

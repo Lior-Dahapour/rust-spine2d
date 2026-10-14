@@ -37,7 +37,7 @@ A Bevy integration is planned but not started.
 
 | Platform | `spine2d-core` and `spine2d-render` | Godot addon |
 |---|---|---|
-| macOS (arm64 and x86_64) | Built and tested on arm64 | Universal library. Tested on arm64 with Godot 4.7.1; the x86_64 half is built but not loaded on an Intel Mac |
+| macOS (arm64 and x86_64) | Built and tested on arm64 | Universal library, built by the GitHub workflow and locally. Tested on arm64 with Godot 4.7.1; the x86_64 half is built but not loaded on an Intel Mac |
 | Linux (x86_64 and arm64) | Plain Rust, no platform-specific code; not tested yet | x86_64 is built by the GitHub workflow, arm64 by `package.sh` on an ARM machine; neither has been tested yet |
 | Windows (x86_64) | Plain Rust, no platform-specific code; not tested yet | Built by the GitHub workflow; not tested yet |
 

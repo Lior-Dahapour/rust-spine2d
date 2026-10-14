@@ -13,7 +13,7 @@ The Spine Runtimes license applies; see the [root README](../../README.md#licens
 
 | Platform | Library in the addon | Status |
 |---|---|---|
-| macOS | `librust_spine2d.dylib`, universal (arm64 and x86_64) | Tested on arm64; the x86_64 half is not loaded anywhere yet |
+| macOS | `librust_spine2d.dylib`, universal (arm64 and x86_64) | Built by `.github/workflows/godot-addon.yml` and locally. Tested on arm64; the x86_64 half is not loaded anywhere yet |
 | Linux | `librust_spine2d.so` for x86_64 and arm64 | x86_64 is built by `.github/workflows/godot-addon.yml`; arm64 you build with `package.sh` on an ARM machine. Not tested yet |
 | Windows | `rust_spine2d.dll` for x86_64 | Built by `.github/workflows/godot-addon.yml`; not tested yet |
 
@@ -25,11 +25,10 @@ supported. Only macOS arm64 has been tried so far, with Godot 4.7.1.
 You need Godot 4.5 or newer. There are two ways to get the addon.
 
 **Option 1: download it.** The `godot-addon` workflow runs on GitHub on every push to `main` that
-changes the code and builds the Linux (x86_64) and Windows (x86_64) libraries. Open the run in the
-Actions tab and download the `rust-spine2d-addon` artifact: a zip with an `addons` folder at its
-root. The macOS library is built only when you start the workflow by hand ("Run workflow", tick
-"Also build the macOS library"), or you build it on a Mac with Option 2 and add the file to the
-addon folder.
+changes the code and builds the Linux (x86_64), Windows (x86_64) and macOS (universal) libraries.
+Open the latest run in the Actions tab and download the `rust-spine2d-addon` artifact: a zip with an
+`addons` folder at its root that holds all three libraries. Linux arm64 is the exception: build that
+one on an ARM machine with Option 2.
 
 **Option 2: build it on your own machine.** The library is built for the system you run on, so
 build on each system you want to ship to.
