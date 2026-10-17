@@ -78,6 +78,12 @@ impl PathConstraint {
     pub fn slot(&self) -> SlotId {
         self.slot
     }
+
+    /// Makes the constraint follow the path attachment of `slot`. Call [`update_cache`](crate::skeleton::Borrowed::update_cache)
+    /// afterwards so the slot's bone is updated before the constraint.
+    pub fn set_slot(&mut self, slot: SlotId) {
+        self.slot = slot;
+    }
 }
 
 fn parts(c: &Constraint) -> &PathConstraint {
@@ -697,7 +703,7 @@ pub(super) fn sort(sk: &mut Skeleton, data: &SkeletonData, index: usize) {
     let slot = parts(&sk.constraints[index]).slot;
     let slot_bone = sk.slots[slot.0].bone;
     let skin = sk.skin.clone();
-    let default_skin = sk.data.default_skin.clone();
+    let default_skin = data.default_skin.clone();
     if let Some(skin) = &skin {
         sort_path_slot(sk, skin, slot.0, slot_bone);
     }

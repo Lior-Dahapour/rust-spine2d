@@ -29,7 +29,7 @@ fn split_at(slots: &[usize]) -> Vec<bool> {
 fn run(slots: &[usize]) -> (Vec<usize>, Vec<(usize, usize)>) {
     let skeleton = skeleton();
     let mut renderer = SkeletonRenderer::new();
-    let batches = renderer.render_batches_split(&skeleton, &split_at(slots));
+    let batches = renderer.render_batches_split(&skeleton.borrow_ref(), &split_at(slots));
     let sizes = batches.groups.iter().map(|g| g.end - g.start).collect();
     let markers = batches
         .markers
@@ -43,8 +43,11 @@ fn run(slots: &[usize]) -> (Vec<usize>, Vec<(usize, usize)>) {
 fn no_split_slots_matches_render_batches() {
     let skeleton = skeleton();
     let mut renderer = SkeletonRenderer::new();
-    let plain = renderer.render_batches(&skeleton).groups.to_vec();
-    let split = renderer.render_batches_split(&skeleton, &[]);
+    let plain = renderer
+        .render_batches(&skeleton.borrow_ref())
+        .groups
+        .to_vec();
+    let split = renderer.render_batches_split(&skeleton.borrow_ref(), &[]);
     assert_eq!(split.groups, plain);
     assert!(split.markers.is_empty());
     assert_eq!(plain.len(), 1);
@@ -83,7 +86,7 @@ fn several_markers_between_the_same_groups_share_a_position() {
 fn every_slot_split_keeps_every_command_once() {
     let skeleton = skeleton();
     let mut renderer = SkeletonRenderer::new();
-    let batches = renderer.render_batches_split(&skeleton, &[true; 5]);
+    let batches = renderer.render_batches_split(&skeleton.borrow_ref(), &[true; 5]);
     let covered: usize = batches.groups.iter().map(|g| g.end - g.start).sum();
     assert_eq!(covered, batches.commands.len());
     assert_eq!(batches.groups.len(), 4);
@@ -95,8 +98,33 @@ fn every_slot_split_keeps_every_command_once() {
 fn slots_beyond_the_flags_are_not_split() {
     let skeleton = skeleton();
     let mut renderer = SkeletonRenderer::new();
-    let batches = renderer.render_batches_split(&skeleton, &[false, true]);
+    let batches = renderer.render_batches_split(&skeleton.borrow_ref(), &[false, true]);
     assert_eq!(batches.groups.len(), 2);
     assert_eq!(batches.markers.len(), 1);
     assert_eq!(batches.markers[0].slot, SlotId(1));
+}
+
+#[cfg(feature = "external-data")]
+#[test]
+fn a_view_over_given_data_renders_the_same_as_one_over_held_data() {
+    let skeleton = skeleton();
+    let data = std::sync::Arc::clone(skeleton.data());
+    let mut held = SkeletonRenderer::new();
+    let mut given = SkeletonRenderer::new();
+
+    let held_commands = held.render(&skeleton.borrow_ref()).to_vec();
+    let given_commands = given.render(&skeleton.as_borrow_ref(&data)).to_vec();
+    assert_eq!(held_commands, given_commands);
+    assert!(!held_commands.is_empty());
+
+    let split = split_at(&[1, 3]);
+    let held_split = held
+        .render_batches_split(&skeleton.borrow_ref(), &split)
+        .groups
+        .to_vec();
+    let given_split = given
+        .render_batches_split(&skeleton.as_borrow_ref(&data), &split)
+        .groups
+        .to_vec();
+    assert_eq!(held_split, given_split);
 }

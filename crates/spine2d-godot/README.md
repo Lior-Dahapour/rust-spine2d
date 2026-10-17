@@ -90,12 +90,12 @@ add_child(hero)
 
 hero.set_animation("run", true, 0)           # name, loop, track
 hero.add_animation("idle", 0.0, true, 0)     # queued after the current one
-hero.animation_event.connect(func(entry, event): print(event.name))
-hero.animation_completed.connect(func(entry): print(entry.get_animation_name()))
+hero.animation_event.connect(func(sprite, state, entry, event): print(event.get_data().get_name()))
+hero.animation_completed.connect(func(sprite, state, entry): print(entry.get_animation().get_name()))
 
 # Move a bone after animations are applied and before world transforms are computed:
-var head := hero.get_bone("head")
-hero.before_world_transforms_change.connect(func(): head.set_rotation(head.get_rotation() + 20.0))
+var head := hero.get_skeleton().find_bone("head").get_pose()
+hero.before_world_transforms_change.connect(func(sprite): head.set_rotation(head.get_rotation() + 20.0))
 ```
 
 ## Classes
@@ -106,18 +106,25 @@ hero.before_world_transforms_change.connect(func(): head.set_rotation(head.get_r
 | `SpineSkeletonDataResource` | Atlas, skeleton file and mix times. Shared by every sprite that uses it. |
 | `SpineAtlasResource`, `SpineSkeletonFileResource` | The loaded `.atlas`, `.skel` and `.spine-json` files. The data is stored inside the saved resource, so exported games do not need the originals. |
 | `SpineSkin` | A skin of the skeleton, or a new empty one. Combine skins for equipment and mix-and-match. See [Skins](#skins). |
-| `SpineTrackEntry`, `SpineBone`, `SpineSlot` | Handles a script gets from the sprite. `is_valid()` turns false when the sprite reloads or is freed. |
+| `SpineAnimationState`, `SpineTrackEntry`, `SpineSkeleton`, `SpineBone`, `SpineSlot`, `SpineAnimation`, `SpineTimeline`, `SpineEvent` | Handles a script gets from the sprite (`get_animation_state()`, `get_skeleton()`, ...). `is_valid()` turns false when the sprite reloads or is freed. |
+| `SpineBonePose`, `SpineSlotPose`, `SpineBoneData`, `SpineSlotData`, `SpineEventData` | The pose of a bone or slot, and the shared data it was made from. Data setters change the data every sprite of that skeleton uses. |
+| `SpineIkConstraint`, `SpineTransformConstraint`, `SpinePathConstraint`, `SpinePhysicsConstraint`, `SpineSlider` | The constraints of a skeleton, each with a `...Pose` and a `...Data` class, as in the official plugin. |
+| `SpineConstant` | The enum constants of the official plugin (bone modes, blend modes, physics, ...). |
 | `SpineBoneNode` | A child of a `SpineSprite` that follows one bone. |
 | `SpineSlotNode` | A child of a `SpineSprite` that follows a slot's bone and draws at the slot's place in the draw order. See [Slot nodes](#slot-nodes). |
 
-`SpineSprite` also has `set_animation`, `add_animation`, `set_empty_animation`,
-`add_empty_animation`, `set_empty_animations`, `clear_track(s)`, `get_current`, `get_bone`,
-`get_slot`, `get_bone_names`, `get_slot_names`, `set_attachment`, `set_skin`, skeleton color,
-`get_bounds`, `get_bounding_box_at`, `update_skeleton` (manual mode), debug drawing for bones,
-bounding boxes and meshes, and the signals `animation_started`, `animation_interrupted`,
+`SpineSprite` gives access to the animation state and the skeleton (`get_animation_state()`,
+`get_skeleton()`), the way the official plugin does, and also has shortcuts: `set_animation`,
+`add_animation`, `set_empty_animation`, `add_empty_animation`, `set_empty_animations`,
+`clear_track(s)`, `get_current`, `get_bone`, `get_slot`, `get_bone_names`, `get_slot_names`,
+`set_attachment`, `set_skin`, skeleton color, `get_bounds`, `get_bounding_box_at`,
+`update_skeleton` (manual mode), per-blend-mode materials (`normal_material`, `additive_material`,
+`multiply_material`, `screen_material`), debug drawing for the root, bones, regions, meshes,
+bounding boxes and clipping, and the signals `animation_started`, `animation_interrupted`,
 `animation_ended`, `animation_disposed`, `animation_completed`, `animation_event`,
-`before_animation_state_update`, `animation_state_updated`, `before_world_transforms_change` and
-`world_transforms_changed`.
+`before_animation_state_update`, `before_animation_state_apply`, `before_world_transforms_change`
+and `world_transforms_changed`. Every signal passes the sprite first, then (for the animation
+signals) the animation state, the track entry and the event, as in the official plugin.
 
 ## Rendering
 
@@ -232,32 +239,55 @@ hero.add_child(node)
   per distinct slot. Sprites without slot nodes are unaffected.
 - Slot nodes and the sprite's meshes sit behind the sprite's other children.
 
+## Compared with the official plugin
+
+The 2D script API is the one of the official spine-godot 4.3 plugin: the same classes, method names
+and signal arguments, so scripts written for it run unchanged. Both cannot be installed together
+(the class names are the same). Where this plugin differs:
+
+- **Left out on purpose:** the 3D classes (`SpineSprite3D`, `SpineSlotNode3D`), `SpineMesh2D`, the
+  editor plug-ins (import plug-ins, the animation-mix inspector, gizmos), the abstract base class
+  `SpineConstraintData` (the concrete data classes are there), and normal and specular maps (the
+  arrays are empty).
+- **`SpineBoneLocal`** is registered, but like in the official plugin no method returns it;
+  `SpineBoneData.get_setup_pose()` returns a `SpineBonePose`.
+- **Bone and slot nodes draw nothing.** `SpineBoneNode.debug_color` and `debug_thickness` can be
+  set, but only log a warning; use the sprite's debug drawing. `SpineSprite` debug drawing is
+  available at run time, not only in the editor, and the `paths` flag draws nothing, as in the
+  official plugin.
+- **Drive mode** moves the bone to the node's place every frame, after the animation, like the
+  official bone node. The node is read against the parent's transform of the frame before, so the
+  bone lags the node by a frame while the parent moves.
+- **The y axis of a bone or slot node** points down like any node's, as in the official plugin
+  (the skeleton itself is y-down, so a raw bone matrix would mirror the node's children).
+- **Data setters** (`SpineBoneData`, `SpineSlotData`, constraint data, animation mixes) change the
+  data shared by every sprite of that skeleton; the ones that change the structure rebuild each
+  sprite's constraint order on the next frame.
+- **Internal names** the official plugin registers (`_on_*` callbacks, `_internal_spine_objects_invalidated`)
+  are not there.
+- **`SpineAnimation.apply` and `SpineTimeline.apply`:** the official ones never put anything into
+  the `events` array they are given; here the events the call fired are appended to it.
+
 ## Limitations
 
-- No 3D node, no script classes for constraints (IK, transform,
-  path, physics, slider), no timeline preview in the editor.
+- No 3D node and no timeline preview in the editor.
 - Screen blend falls back to additive, because Godot has no screen blend.
 - Premultiplied-alpha atlases work, but Godot's default texture import ("Fix Alpha Border") leaves
   a faint rim. Turn it off for those textures, or export a non-premultiplied atlas.
-- No HDR-2D tint conversion, normal or specular maps, or light masks.
+- No HDR-2D tint conversion or light masks.
+- No editor tools: the official plugin's import plug-ins, the animation-mix inspector and the 3D
+  gizmo are not there. The `.atlas`, `.skel` and `.spine-json` files load through a resource
+  loader instead.
+- `SpineBoneData.get_color()` and `set_color()` work, but the color is only stored in a file
+  exported with nonessential data (otherwise it is the default gray), and it changes nothing on
+  screen: the debug drawing uses the sprite's own debug colors.
 - Plain `.json` is not claimed by the loader because Godot owns that extension. Rename the file to
   `.spine-json`.
-- Windows and Linux libraries come from `.github/workflows/godot-addon.yml`, which has not been
-  run yet. The x86_64 half of the macOS universal library is built but was not loaded on the arm64
-  test machine.
-- Godot 4.7.1 crashes on exit when a scripted run quits right after startup
-  (`godot --headless --import --quit` on a fresh project, exit code 134). This happens with any
-  class registered by a gdext 0.5.5 extension built against API 4.5, even an empty `Node2D`, so it
-  is not specific to Spine. Editor use and running games are not affected. To import in CI use
-  `godot --headless --editor --path <project> --quit-after 120`.
 
 ## Performance
 
-The official plugin creates one mesh per slot. This extension merges consecutive slots that share a
-texture, blend mode and tint into one mesh and writes the geometry into persistent buffers in
-place, uploading only the regions that changed, so a skeleton costs a few draw calls instead of
-about one per slot. [`godot-bench`](../../godot-bench) compares the two plugins in release builds
-of both; run it on your own hardware, as the result depends on the machine and the renderer.
+See [`bench/BENCH.md`](../../bench/BENCH.md) for the comparison with the official plugin, and
+[`bench/godot-bench/README.md`](../../bench/godot-bench/README.md) to run it yourself.
 
 ## Building and testing
 
@@ -280,14 +310,23 @@ GODOT=/path/to/godot crates/spine2d-godot/package.sh --verify <spine-runtimes ch
 On Windows run the same two commands in Git Bash, with the path in Git Bash style, for example
 `GODOT=/c/Godot/Godot_v4.5-stable_win64.exe`. `run.sh` builds the extension and runs the
 suites; `package.sh --verify` packages the addon and tests it in a clean project. Some suites
-(`cull_test`, `stale_test`, `slot_test`, `attachment_test`, `rebuilt_mesh_test`) open a real window,
-so on a Linux machine without a display run them under `xvfb-run`. The `profiling` cargo feature
-fills in `SpineSprite.take_timings()` for the benchmark scenes. These scripts have only been run on
+(`cull_test`, `stale_test`, `slot_test`, `attachment_test`, `visibility_test`) open a real window,
+so on a Linux machine without a display run them under `xvfb-run`. These scripts have only been run on
 macOS.
 
 ## Design
 
-`SpineSprite` owns one `Player` (skeleton, animation state, renderer, meshes) that is shared with
-the bone, slot and track-entry handles scripts hold. Each frame the sprite advances the state,
-applies it, computes world transforms and draws, emitting its signals between the steps with no
-borrow held, so scripts can call back into the sprite from any signal.
+Every sprite is an entity in an ECS world (`bevy_ecs`) that lives on the main thread. The skeleton
+data is not in the sprite: it sits in a store that all sprites of that skeleton share, so changing
+it from a script (a bone's setup pose, a mix time, a constraint's data) is one write that every
+sprite sees. The systems that pose and draw skeletons are the generic ones of the `spine2d-ecs`
+crate, run once per frame in stages: apply the animation state, drive bones from `SpineBoneNode`s
+in drive mode, compute world transforms, build the draw commands, and place the meshes and the
+follower nodes.
+
+The objects a script holds (`SpineBone`, `SpineTrackEntry`, `SpineSkeleton`, the constraints, ...)
+are small handles that name an entity or a skeleton data entry and look it up in the world on
+every call, so they can never point at freed memory: they turn invalid (`is_valid()`) when the
+sprite reloads or is freed. Signals are queued while the world is in use and emitted afterwards
+with the world closed, so a script can call back into any sprite from any signal. A call that finds
+the world busy is a bug in the extension and is logged.

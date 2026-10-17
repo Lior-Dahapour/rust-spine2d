@@ -29,7 +29,7 @@
 
 //! Constraint instances: IK, transform, path, physics and slider constraints.
 //!
-//! Setup data lives in [`ConstraintData`]; a [`Skeleton`](crate::Skeleton) owns one
+//! Setup data lives in [`ConstraintData`]; a [`Skeleton`] owns one
 //! [`Constraint`] per data entry. Like bones, a constraint has a `pose` (set by animations and
 //! application code), a `constrained` copy and an applied pose that selects between them.
 
@@ -117,10 +117,36 @@ pub struct IkConstraint {
     pub(crate) target: BoneId,
 }
 
+impl IkConstraint {
+    /// The bone the constrained bones reach for.
+    pub fn target(&self) -> BoneId {
+        self.target
+    }
+
+    /// Makes the constrained bones reach for `bone`. Call [`update_cache`](crate::skeleton::Borrowed::update_cache) afterwards so
+    /// `bone` is updated before the constraint; `bone` must not depend on the constrained bones.
+    pub fn set_target(&mut self, bone: BoneId) {
+        self.target = bone;
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct TransformConstraint {
     pub pose: PoseSet<TransformConstraintPose>,
     pub(crate) source: BoneId,
+}
+
+impl TransformConstraint {
+    /// The bone the constrained bones copy from.
+    pub fn source(&self) -> BoneId {
+        self.source
+    }
+
+    /// Makes the constrained bones copy from `bone`. Call [`update_cache`](crate::skeleton::Borrowed::update_cache) afterwards so
+    /// `bone` is updated before the constraint; `bone` must not depend on the constrained bones.
+    pub fn set_source(&mut self, bone: BoneId) {
+        self.source = bone;
+    }
 }
 
 /// The variant-specific part of a [`Constraint`].
@@ -172,6 +198,13 @@ impl Constraint {
     /// source is inactive.
     pub fn is_active(&self) -> bool {
         self.active
+    }
+
+    /// Sets the flag [`Constraint::is_active`] reports. The update loop does not read it: the
+    /// skeleton recomputes it from the skin in `update_cache`, so a value set here lasts only
+    /// until the next rebuild.
+    pub fn set_active(&mut self, active: bool) {
+        self.active = active;
     }
 
     pub(crate) fn setup_pose(&mut self, data: &ConstraintData) {

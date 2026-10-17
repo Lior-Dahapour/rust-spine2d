@@ -105,7 +105,7 @@ fn fixture(mix: f32) -> Fixture {
 impl Fixture {
     fn step(&mut self, dt: f32) -> bool {
         self.state.update(dt);
-        let applied = self.state.apply(&mut self.sk);
+        let applied = self.state.apply(&mut self.sk.borrow());
         self.sk.update_world_transform(Physics::None);
         applied
     }

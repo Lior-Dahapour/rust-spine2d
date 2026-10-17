@@ -49,10 +49,10 @@ fn main() {
         let delta = 1.0 / 60.0;
         skeleton.update_time(delta);
         state.update(delta);
-        state.apply(&mut skeleton);
+        state.apply(&mut skeleton.borrow());
         skeleton.update_world_transform(Physics::Update);
 
-        let commands = renderer.render(&skeleton);
+        let commands = renderer.render(&skeleton.borrow_ref());
         println!("frame {frame}: {} draw calls", commands.len());
         for command in commands {
             println!(

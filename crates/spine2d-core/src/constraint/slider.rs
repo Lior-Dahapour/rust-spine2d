@@ -49,6 +49,17 @@ impl Slider {
             bone: d.bone.map(BoneId),
         }
     }
+
+    /// The bone whose property drives the animation, if any.
+    pub fn bone(&self) -> Option<BoneId> {
+        self.bone
+    }
+
+    /// Drives the animation from a property of `bone`, or from the pose time when `None`. Call
+    /// [`update_cache`](crate::skeleton::Borrowed::update_cache) afterwards so `bone` is updated before the constraint.
+    pub fn set_bone(&mut self, bone: Option<BoneId>) {
+        self.bone = bone;
+    }
 }
 
 fn parts(c: &Constraint) -> &Slider {
@@ -104,7 +115,14 @@ pub(super) fn update(sk: &mut Skeleton, data: &SkeletonData, index: usize) {
         out: false,
         applied_pose: true,
     };
-    animation.apply(sk, p.time, p.time, d.loop_, None, &options);
+    animation.apply(
+        &mut sk.as_borrow(data),
+        p.time,
+        p.time,
+        d.loop_,
+        None,
+        &options,
+    );
 }
 
 pub(super) fn sort(sk: &mut Skeleton, data: &SkeletonData, index: usize) {

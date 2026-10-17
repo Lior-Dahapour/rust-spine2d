@@ -1,45 +1,48 @@
-//! Godot 4 extension that plays Spine 4.3 skeletons with the Rust runtime.
+//! Godot 4 extension that plays Spine 4.3 skeletons with the Rust runtime, on one shared ECS
+//! world.
 
-mod api;
-mod attachment;
-mod batch_mesh;
-mod bone_node;
-mod debug;
-mod loader;
-mod materials;
+mod constants;
+mod handles;
+mod nodes;
 mod resources;
-mod skin;
-mod slot_node;
-mod sprite;
+mod runtime;
+mod systems;
 
 use godot::classes::ResourceLoader;
 use godot::obj::Singleton;
 use godot::prelude::*;
 use std::cell::RefCell;
 
-struct Spine2dExtension;
+struct Spine2dEcsExtension;
 
 thread_local! {
     // Keeps the format loader alive while it is registered with Godot.
-    static LOADER: RefCell<Option<Gd<loader::SpineResourceLoader>>> = const { RefCell::new(None) };
+    static LOADER: RefCell<Option<Gd<resources::loader::SpineResourceLoader>>> = const { RefCell::new(None) };
 }
 
 #[gdextension]
-unsafe impl ExtensionLibrary for Spine2dExtension {
+unsafe impl ExtensionLibrary for Spine2dEcsExtension {
     fn on_stage_init(stage: InitStage) {
         if stage == InitStage::Scene {
-            let loader = loader::SpineResourceLoader::new_gd();
+            let loader = resources::loader::SpineResourceLoader::new_gd();
             ResourceLoader::singleton().add_resource_format_loader(&loader);
             LOADER.with(|slot| *slot.borrow_mut() = Some(loader));
+            runtime::world::create();
+        }
+        if stage == InitStage::MainLoop {
+            nodes::driver::add();
         }
     }
 
     fn on_stage_deinit(stage: InitStage) {
+        if stage == InitStage::MainLoop {
+            nodes::driver::remove();
+        }
         if stage == InitStage::Scene {
+            runtime::world::destroy();
             if let Some(loader) = LOADER.with(|slot| slot.borrow_mut().take()) {
                 ResourceLoader::singleton().remove_resource_format_loader(&loader);
             }
-            materials::free_all();
         }
     }
 }

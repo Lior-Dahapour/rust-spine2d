@@ -63,7 +63,7 @@ func _ready() -> void:
 	check("held bone reports invalid after the reload", not bone.is_valid())
 	check("held slot reports invalid after the reload", not slot.is_valid())
 	check("held track entry reports invalid after the reload", not entry.is_valid())
-	bone.set_rotation(45.0)
+	bone.get_pose().set_rotation(45.0)
 	slot.set_color(Color.RED)
 	check("writing through dead handles is harmless", not slot.set_attachment("anything"))
 	check("sprite's own handles are valid", sprite.get_bone("head") != null and sprite.get_bone("head").is_valid())

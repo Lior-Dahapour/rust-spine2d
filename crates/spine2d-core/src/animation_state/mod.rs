@@ -33,9 +33,11 @@
 //! inside the state and are addressed by [`EntryId`] handles: a handle whose entry has been
 //! disposed simply returns `None`.
 
+mod borrowed;
 mod data;
 mod track_entry;
 
+pub use borrowed::BorrowedAnimationState;
 pub use data::AnimationStateData;
 pub use track_entry::TrackEntry;
 
@@ -46,7 +48,8 @@ use crate::animation::{
 use crate::bone::BoneLocal;
 use crate::event::Event;
 use crate::math::{abs, ceil, fmod, sign};
-use crate::skeleton::Skeleton;
+use crate::skeleton::{BorrowedSkeleton, Skeleton};
+use crate::skeleton_data::SkeletonData;
 use rustc_hash::FxHashMap;
 use slotmap::{new_key_type, SlotMap};
 use std::fmt;
@@ -105,6 +108,9 @@ pub fn empty_animation() -> Arc<Animation> {
         .clone()
 }
 
+/// What a method panics with when it needs the mix settings a detached state does not hold.
+const DETACHED: &str = "this state holds no data; use `as_borrow` (see `AnimationState::detached`)";
+
 #[derive(Clone)]
 struct QueueEntry {
     kind: EventType,
@@ -115,7 +121,8 @@ struct QueueEntry {
 /// Applies animations over time, queues animations for later playback, mixes (crossfading)
 /// between animations, and fires events.
 pub struct AnimationState {
-    data: Arc<AnimationStateData>,
+    /// `None` for a [`AnimationState::detached`] one.
+    data: Option<Arc<AnimationStateData>>,
     entries: SlotMap<EntryId, TrackEntry>,
     tracks: Vec<Option<EntryId>>,
     /// Events fired by timelines during the current apply.
@@ -133,6 +140,21 @@ pub struct AnimationState {
 
 impl AnimationState {
     pub fn new(data: Arc<AnimationStateData>) -> Self {
+        Self::with_data(Some(data))
+    }
+
+    /// A state that holds no [`AnimationStateData`]: whoever calls it keeps the mix settings and
+    /// the skeleton data, and starts animations through `as_borrow`.
+    ///
+    /// Needs the `external-data` feature. **This is for building a runtime or something
+    /// similar**; anyone else should use [`AnimationState::new`].
+    #[cfg_attr(not(feature = "external-data"), visibility::make(pub(crate)))]
+    #[cfg_attr(not(feature = "external-data"), allow(dead_code))]
+    pub fn detached() -> Self {
+        Self::with_data(None)
+    }
+
+    fn with_data(data: Option<Arc<AnimationStateData>>) -> Self {
         AnimationState {
             data,
             entries: SlotMap::with_key(),
@@ -149,8 +171,10 @@ impl AnimationState {
         }
     }
 
+    /// The mix settings this state holds. Panics for a detached state (the `external-data`
+    /// feature).
     pub fn data(&self) -> &Arc<AnimationStateData> {
-        &self.data
+        self.data.as_ref().expect(DETACHED)
     }
 
     /// The entry for a handle, or `None` if it has been disposed.
@@ -326,7 +350,8 @@ impl AnimationState {
 
     /// Poses the skeleton from the current state of all tracks. Returns true if any entry was
     /// applied.
-    pub fn apply(&mut self, skeleton: &mut Skeleton) -> bool {
+    pub fn apply(&mut self, skeleton: &mut BorrowedSkeleton) -> bool {
+        let (skeleton, skeleton_data) = skeleton.parts();
         if self.animations_changed {
             self.compute_animations_changed();
         }
@@ -345,7 +370,7 @@ impl AnimationState {
             let mut alpha = self.entries[cur].alpha;
             let mut mix_out = false;
             if self.entries[cur].mixing_from.is_some() {
-                alpha *= self.apply_mixing_from(cur, skeleton);
+                alpha *= self.apply_mixing_from(cur, skeleton, skeleton_data);
             } else {
                 let c = &self.entries[cur];
                 if c.track_time >= c.track_end && c.next.is_none() {
@@ -397,6 +422,7 @@ impl AnimationState {
                         Timeline::Attachment(t) => apply_attachment_timeline(
                             t,
                             skeleton,
+                            skeleton_data,
                             unkeyed,
                             apply_time,
                             MixFrom::Setup,
@@ -408,7 +434,13 @@ impl AnimationState {
                             } else {
                                 Some(&mut self.events)
                             };
-                            timeline.apply(skeleton, animation_last, apply_time, events, &o);
+                            timeline.apply(
+                                &mut skeleton.as_borrow(skeleton_data),
+                                animation_last,
+                                apply_time,
+                                events,
+                                &o,
+                            );
                         }
                     }
                 }
@@ -428,6 +460,7 @@ impl AnimationState {
                             apply_rotate_timeline(
                                 t,
                                 skeleton,
+                                skeleton_data,
                                 apply_time,
                                 alpha,
                                 mix_from,
@@ -440,6 +473,7 @@ impl AnimationState {
                             apply_attachment_timeline(
                                 t,
                                 skeleton,
+                                skeleton_data,
                                 unkeyed,
                                 apply_time,
                                 mix_from,
@@ -459,7 +493,13 @@ impl AnimationState {
                             } else {
                                 Some(&mut self.events)
                             };
-                            timeline.apply(skeleton, animation_last, apply_time, events, &o);
+                            timeline.apply(
+                                &mut skeleton.as_borrow(skeleton_data),
+                                animation_last,
+                                apply_time,
+                                events,
+                                &o,
+                            );
                         }
                     }
                 }
@@ -482,11 +522,11 @@ impl AnimationState {
         let setup_state = self.unkeyed_state + ATTACH_SETUP;
         for i in 0..skeleton.slots.len() {
             if skeleton.slots[i].attachment_state == setup_state {
-                let name = &skeleton.data.slots[i].attachment_name;
+                let name = &skeleton_data.slots[i].attachment_name;
                 let attachment = if name.is_empty() {
                     None
                 } else {
-                    skeleton.attachment_by_index(i, name)
+                    skeleton.find_attachment(skeleton_data, i, name)
                 };
                 skeleton.slots[i].pose.set_attachment(attachment);
             }
@@ -498,12 +538,17 @@ impl AnimationState {
     }
 
     /// Applies the entries being mixed out into `to`, recursively; returns the mix of `to`.
-    fn apply_mixing_from(&mut self, to: EntryId, skeleton: &mut Skeleton) -> f32 {
+    fn apply_mixing_from(
+        &mut self,
+        to: EntryId,
+        skeleton: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+    ) -> f32 {
         let from = self.entries[to]
             .mixing_from
             .expect("caller checked mixing_from");
         let from_mix = if self.entries[from].mixing_from.is_some() {
-            self.apply_mixing_from(from, skeleton)
+            self.apply_mixing_from(from, skeleton, skeleton_data)
         } else {
             1.0
         };
@@ -583,6 +628,7 @@ impl AnimationState {
                     apply_rotate_timeline(
                         t,
                         skeleton,
+                        skeleton_data,
                         apply_time,
                         alpha,
                         mix_from,
@@ -595,6 +641,7 @@ impl AnimationState {
                     apply_attachment_timeline(
                         t,
                         skeleton,
+                        skeleton_data,
                         unkeyed,
                         apply_time,
                         mix_from,
@@ -617,7 +664,13 @@ impl AnimationState {
                     } else {
                         None
                     };
-                    timeline.apply(skeleton, animation_last, apply_time, events, &o);
+                    timeline.apply(
+                        &mut skeleton.as_borrow(skeleton_data),
+                        animation_last,
+                        apply_time,
+                        events,
+                        &o,
+                    );
                 }
             }
         }
@@ -784,39 +837,18 @@ impl AnimationState {
         animation: Arc<Animation>,
         looping: bool,
     ) -> EntryId {
-        let mut interrupt = true;
-        let mut current = self.expand_to_index(track_index);
-        if let Some(cur) = current {
-            let never_applied_same = {
-                let c = &self.entries[cur];
-                c.next_track_last == -1.0 && Arc::ptr_eq(&c.animation, &animation)
-            };
-            if never_applied_same {
-                // Don't mix from an entry that was never applied.
-                self.tracks[track_index] = self.entries[cur].mixing_from;
-                self.queue_interrupt(cur);
-                self.queue_end(cur);
-                self.clear_next(cur);
-                current = self.entries[cur].mixing_from;
-                interrupt = false;
-            } else {
-                self.clear_next(cur);
-            }
-        }
-        let entry = self.new_track_entry(track_index, animation, looping, current);
-        self.set_track(track_index, entry, interrupt);
-        self.drain();
-        entry
+        self.borrow().set_animation(track_index, animation, looping)
     }
 
+    /// Like [`set_animation`](Self::set_animation), finding the animation by name.
     pub fn set_animation_by_name(
         &mut self,
         track_index: usize,
         name: &str,
         looping: bool,
     ) -> Result<EntryId, StateError> {
-        let animation = self.find_animation(name)?;
-        Ok(self.set_animation(track_index, animation, looping))
+        self.borrow()
+            .set_animation_by_name(track_index, name, looping)
     }
 
     /// Queues an animation to play after the current and queued ones. `delay` is the seconds to
@@ -827,38 +859,13 @@ impl AnimationState {
         track_index: usize,
         animation: Arc<Animation>,
         looping: bool,
-        mut delay: f32,
+        delay: f32,
     ) -> EntryId {
-        let mut last = self.expand_to_index(track_index);
-        if let Some(mut l) = last {
-            while let Some(n) = self.entries[l].next {
-                l = n;
-            }
-            last = Some(l);
-        }
-        let entry = self.new_track_entry(track_index, animation, looping, last);
-        match last {
-            None => {
-                self.set_track(track_index, entry, true);
-                self.drain();
-                if delay < 0.0 {
-                    delay = 0.0;
-                }
-            }
-            Some(l) => {
-                self.entries[l].next = Some(entry);
-                self.entries[entry].previous = Some(l);
-                if delay <= 0.0 {
-                    delay = (delay + self.entries[l].track_complete()
-                        - self.entries[entry].mix_duration)
-                        .max(0.0);
-                }
-            }
-        }
-        self.entries[entry].delay = delay;
-        entry
+        self.borrow()
+            .add_animation(track_index, animation, looping, delay)
     }
 
+    /// Like [`add_animation`](Self::add_animation), finding the animation by name.
     pub fn add_animation_by_name(
         &mut self,
         track_index: usize,
@@ -866,18 +873,14 @@ impl AnimationState {
         looping: bool,
         delay: f32,
     ) -> Result<EntryId, StateError> {
-        let animation = self.find_animation(name)?;
-        Ok(self.add_animation(track_index, animation, looping, delay))
+        self.borrow()
+            .add_animation_by_name(track_index, name, looping, delay)
     }
 
     /// Sets an empty animation for a track, discarding queued animations, mixing out the current
     /// animation over `mix_duration`.
     pub fn set_empty_animation(&mut self, track_index: usize, mix_duration: f32) -> EntryId {
-        let entry = self.set_animation(track_index, empty_animation(), false);
-        let e = &mut self.entries[entry];
-        e.mix_duration = mix_duration;
-        e.track_end = mix_duration;
-        entry
+        self.borrow().set_empty_animation(track_index, mix_duration)
     }
 
     /// Adds an empty animation to be played after the current or queued animations.
@@ -887,27 +890,13 @@ impl AnimationState {
         mix_duration: f32,
         delay: f32,
     ) -> EntryId {
-        let entry = self.add_animation(track_index, empty_animation(), false, delay);
-        let e = &mut self.entries[entry];
-        if delay <= 0.0 {
-            e.delay = (e.delay + e.mix_duration - mix_duration).max(0.0);
-        }
-        e.mix_duration = mix_duration;
-        e.track_end = mix_duration;
-        entry
+        self.borrow()
+            .add_empty_animation(track_index, mix_duration, delay)
     }
 
     /// Sets an empty animation on every track that has an entry.
     pub fn set_empty_animations(&mut self, mix_duration: f32) {
-        let old = self.drain_disabled;
-        self.drain_disabled = true;
-        for i in 0..self.tracks.len() {
-            if self.tracks[i].is_some() {
-                self.set_empty_animation(i, mix_duration);
-            }
-        }
-        self.drain_disabled = old;
-        self.drain();
+        self.borrow().set_empty_animations(mix_duration);
     }
 
     /// Sets an entry's mix duration. If `delay` is 0 or negative it is computed relative to the
@@ -937,14 +926,6 @@ impl AnimationState {
             e.next
                 .is_some_and(|n| e.next_track_last - self.entries[n].delay >= 0.0)
         })
-    }
-
-    fn find_animation(&self, name: &str) -> Result<Arc<Animation>, StateError> {
-        self.data
-            .skeleton_data()
-            .find_animation(name)
-            .cloned()
-            .ok_or_else(|| StateError::AnimationNotFound(name.to_string()))
     }
 
     fn set_track(&mut self, index: usize, current: EntryId, interrupt: bool) {
@@ -978,6 +959,7 @@ impl AnimationState {
 
     fn new_track_entry(
         &mut self,
+        mix_table: &AnimationStateData,
         track_index: usize,
         animation: Arc<Animation>,
         looping: bool,
@@ -985,9 +967,7 @@ impl AnimationState {
     ) -> EntryId {
         let mix_duration = match last {
             None => 0.0,
-            Some(l) => self
-                .data
-                .mix(self.entries[l].animation.name(), animation.name()),
+            Some(l) => mix_table.mix(self.entries[l].animation.name(), animation.name()),
         };
         let animation_end = animation.duration;
         self.entries.insert(TrackEntry {
@@ -1266,6 +1246,7 @@ impl AnimationState {
 fn apply_attachment_timeline(
     t: &AttachmentTimeline,
     skeleton: &mut Skeleton,
+    skeleton_data: &SkeletonData,
     unkeyed_state: i32,
     time: f32,
     from: MixFrom,
@@ -1288,12 +1269,12 @@ fn apply_attachment_timeline(
         if from == MixFrom::Current {
             return;
         }
-        name = &skeleton.data.slots[slot_index].attachment_name;
+        name = &skeleton_data.slots[slot_index].attachment_name;
     }
     let attachment = if name.is_empty() {
         None
     } else {
-        skeleton.attachment_by_index(slot_index, name)
+        skeleton.find_attachment(skeleton_data, slot_index, name)
     };
     let slot = &mut skeleton.slots[slot_index];
     slot.pose.set_attachment(attachment);
@@ -1311,6 +1292,7 @@ fn apply_attachment_timeline(
 fn apply_rotate_timeline(
     t: &BoneTimeline1,
     skeleton: &mut Skeleton,
+    skeleton_data: &SkeletonData,
     time: f32,
     alpha: f32,
     from: MixFrom,
@@ -1329,14 +1311,14 @@ fn apply_rotate_timeline(
             out: false,
             applied_pose: false,
         };
-        t.apply(skeleton, time, &o);
+        t.apply(skeleton, skeleton_data, time, &o);
         return;
     }
     let bone = &mut skeleton.bones[t.bone];
     if !bone.active {
         return;
     }
-    let setup: &BoneLocal = &skeleton.data.bones[t.bone].setup_pose;
+    let setup: &BoneLocal = &skeleton_data.bones[t.bone].setup_pose;
     let pose = &mut bone.pose.local;
     let (r1, r2);
     if time < t.curve.frames[0] {

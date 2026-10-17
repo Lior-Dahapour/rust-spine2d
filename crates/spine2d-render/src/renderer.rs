@@ -31,7 +31,8 @@
 
 use crate::clipping::SkeletonClipping;
 use spine2d_core::attachment::Attachment;
-use spine2d_core::{BlendMode, Skeleton, SlotId};
+use spine2d_core::skeleton::BorrowedSkeletonRef;
+use spine2d_core::{BlendMode, SlotId};
 
 /// One draw call: a batch of triangles sharing a texture, blend mode and tint.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -163,7 +164,7 @@ impl SkeletonRenderer {
     /// Renders the skeleton's applied pose in draw order. Consecutive attachments with the same
     /// texture, blend mode and colors are merged into one command. The returned commands are valid
     /// until the next call.
-    pub fn render(&mut self, skeleton: &Skeleton) -> &[RenderCommand] {
+    pub fn render(&mut self, skeleton: &BorrowedSkeletonRef) -> &[RenderCommand] {
         self.build_sub_commands(skeleton, &[]);
         self.compute_groups();
         self.merge_groups();
@@ -172,7 +173,8 @@ impl SkeletonRenderer {
 
     /// Like [`render`](Self::render) but stops before merging: returns the per-attachment
     /// sub-commands and the groups that would be merged. Valid until the next call.
-    pub fn render_batches(&mut self, skeleton: &Skeleton) -> Batches<'_> {
+    #[inline]
+    pub fn render_batches(&mut self, skeleton: &BorrowedSkeletonRef) -> Batches<'_> {
         self.render_batches_split(skeleton, &[])
     }
 
@@ -182,7 +184,7 @@ impl SkeletonRenderer {
     /// slot, even when the slot draws nothing. Slots past the end of `split_slots` are not split.
     pub fn render_batches_split(
         &mut self,
-        skeleton: &Skeleton,
+        skeleton: &BorrowedSkeletonRef,
         split_slots: &[bool],
     ) -> Batches<'_> {
         self.build_sub_commands(skeleton, split_slots);
@@ -194,10 +196,10 @@ impl SkeletonRenderer {
         }
     }
 
-    fn build_sub_commands(&mut self, skeleton: &Skeleton, split_slots: &[bool]) {
+    fn build_sub_commands(&mut self, skeleton: &BorrowedSkeletonRef, split_slots: &[bool]) {
+        let skeleton_data = skeleton.data();
         self.sub_count = 0;
         self.markers.clear();
-        let data = skeleton.data();
         // The marker for a slot is placed when the next slot starts (or the loop ends), because
         // the loop body leaves early in many places.
         let mut pending_marker: Option<SlotId> = None;
@@ -318,7 +320,7 @@ impl SkeletonRenderer {
                 Source::Mesh(t) => t,
             };
 
-            let blend_mode = data.slots[slot_id.0].blend_mode;
+            let blend_mode = skeleton_data.slots[slot_id.0].blend_mode;
             let cmd = take_command(&mut self.sub_commands, &mut self.sub_count);
             cmd.blend_mode = blend_mode;
             cmd.texture = texture;

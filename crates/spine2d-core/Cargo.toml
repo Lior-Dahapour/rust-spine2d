@@ -14,6 +14,16 @@ slotmap = "1.1.1"
 smallvec = "1.16.3"
 smol_str = "0.3"
 thiserror = "2"
+visibility = "0.1"
 
 [dev-dependencies]
 ctor = "1.0.13"
+
+[features]
+# Makes the `_with` methods and the `detached` constructors public. They are for building a
+# runtime that keeps the skeleton data itself; everyone else uses `Skeleton::new`.
+external-data = []
+
+[[test]]
+name = "detached"
+required-features = ["external-data"]

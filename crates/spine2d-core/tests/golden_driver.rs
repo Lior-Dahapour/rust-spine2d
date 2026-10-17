@@ -77,7 +77,7 @@ fn run_rust(
         );
         sk.update_time(DT);
         state.update(DT);
-        state.apply(&mut sk);
+        state.apply(&mut sk.borrow());
         sk.update_world_transform(if i == 0 {
             Physics::Reset
         } else {

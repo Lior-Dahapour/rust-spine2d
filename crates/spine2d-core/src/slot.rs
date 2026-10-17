@@ -197,7 +197,7 @@ impl Slot {
 
     /// Resets the pose to the setup pose. `attachment` is the setup attachment resolved by the
     /// skeleton from `data.attachment_name`.
-    pub(crate) fn setup_pose(&mut self, data: &SlotData, attachment: Option<Arc<Attachment>>) {
+    pub fn setup_pose(&mut self, data: &SlotData, attachment: Option<Arc<Attachment>>) {
         self.pose.color = data.setup_pose.color;
         if self.pose.has_dark_color {
             self.pose.dark_color = data.setup_pose.dark_color;

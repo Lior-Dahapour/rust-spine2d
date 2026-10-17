@@ -32,6 +32,7 @@ use super::{search_step, ApplyOptions, MixFrom, Property, PropertyId};
 use crate::bone::BoneLocal;
 use crate::enums::Inherit;
 use crate::skeleton::Skeleton;
+use crate::skeleton_data::SkeletonData;
 use smallvec::{smallvec, SmallVec};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -84,12 +85,18 @@ impl BoneTimeline1 {
         smallvec![self.kind.property().id(self.bone)]
     }
 
-    pub(crate) fn apply(&self, skeleton: &mut Skeleton, time: f32, o: &ApplyOptions) {
+    pub(crate) fn apply(
+        &self,
+        skeleton: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+        time: f32,
+        o: &ApplyOptions,
+    ) {
         let bone = &mut skeleton.bones[self.bone];
         if !bone.active {
             return;
         }
-        let setup = &skeleton.data.bones[self.bone].setup_pose;
+        let setup = &skeleton_data.bones[self.bone].setup_pose;
         let local = if o.applied_pose {
             &mut bone.applied_pose_mut().local
         } else {
@@ -166,12 +173,18 @@ impl BoneTimeline2 {
         smallvec![a.id(self.bone), b.id(self.bone)]
     }
 
-    pub(crate) fn apply(&self, skeleton: &mut Skeleton, time: f32, o: &ApplyOptions) {
+    pub(crate) fn apply(
+        &self,
+        skeleton: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+        time: f32,
+        o: &ApplyOptions,
+    ) {
         let bone = &mut skeleton.bones[self.bone];
         if !bone.active {
             return;
         }
-        let setup = &skeleton.data.bones[self.bone].setup_pose;
+        let setup = &skeleton_data.bones[self.bone].setup_pose;
         let local = if o.applied_pose {
             &mut bone.applied_pose_mut().local
         } else {
@@ -293,12 +306,18 @@ impl InheritTimeline {
         smallvec![Property::Inherit.id(self.bone)]
     }
 
-    pub(crate) fn apply(&self, skeleton: &mut Skeleton, time: f32, o: &ApplyOptions) {
+    pub(crate) fn apply(
+        &self,
+        skeleton: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+        time: f32,
+        o: &ApplyOptions,
+    ) {
         let bone = &mut skeleton.bones[self.bone];
         if !bone.active {
             return;
         }
-        let setup = skeleton.data.bones[self.bone].setup_pose.inherit;
+        let setup = skeleton_data.bones[self.bone].setup_pose.inherit;
         let local = if o.applied_pose {
             &mut bone.applied_pose_mut().local
         } else {

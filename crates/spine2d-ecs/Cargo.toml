@@ -1,0 +1,17 @@
+[package]
+name = "spine2d-ecs"
+version.workspace = true
+edition.workspace = true
+license-file = "../../LICENSE-SPINE"
+description = "Engine-independent ECS components and systems for the spine2d Spine 4.3 runtime"
+
+[dependencies]
+spine2d-core = { path = "../spine2d-core", features = ["external-data"] }
+spine2d-render = { path = "../spine2d-render" }
+bevy_ecs = { version = "0.19.1", default-features = false, features = ["std"] }
+bevy_time = { version = "0.19.1", default-features = false, features = ["std"] }
+crossbeam-channel = "0.5"
+glam = "0.34.1"
+bevy_derive = "0.19.1"
+smol_str = "0.3"
+tracing = "0.1"

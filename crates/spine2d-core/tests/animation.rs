@@ -22,7 +22,7 @@ fn opts(alpha: f32, from: MixFrom) -> ApplyOptions {
 }
 
 fn apply(tl: Timeline, sk: &mut Skeleton, time: f32, o: &ApplyOptions) {
-    tl.apply(sk, -1.0, time, None, o);
+    tl.apply(&mut sk.borrow(), -1.0, time, None, o);
 }
 
 /// Bones: root, child. Setup: root rotation 10, x 5, scale 2; child x 1.
@@ -614,7 +614,7 @@ fn event_timeline() -> EventTimeline {
 fn fired(t: &EventTimeline, last: f32, time: f32) -> Vec<String> {
     let mut out = Vec::new();
     Timeline::Event(t.clone()).apply(
-        &mut skeleton(),
+        &mut skeleton().borrow(),
         last,
         time,
         Some(&mut out),
@@ -634,7 +634,13 @@ fn event_timeline_fires_in_range() {
     assert_eq!(fired(&t, -1.0, 0.1), Vec::<String>::new());
     assert_eq!(fired(&t, -1.0, 9.0), ["a", "b", "c", "d"]);
     // No event list: nothing happens and nothing panics.
-    Timeline::Event(t).apply(&mut skeleton(), -1.0, 9.0, None, &ApplyOptions::default());
+    Timeline::Event(t).apply(
+        &mut skeleton().borrow(),
+        -1.0,
+        9.0,
+        None,
+        &ApplyOptions::default(),
+    );
 }
 
 #[test]
@@ -645,7 +651,7 @@ fn animation_loops_and_fires_across_the_wrap() {
     let mut events = Vec::new();
     // 1.9 -> 2.3 wraps to 1.9 -> 0.3: fires "d" at 2.0, then restarts and fires nothing before 0.5.
     anim.apply(
-        &mut sk,
+        &mut sk.borrow(),
         1.9,
         2.3,
         true,
@@ -662,7 +668,7 @@ fn animation_loops_and_fires_across_the_wrap() {
 
     events.clear();
     anim.apply(
-        &mut sk,
+        &mut sk.borrow(),
         1.9,
         2.7,
         true,
@@ -709,9 +715,23 @@ fn animation_apply_wraps_time_when_looping() {
         1.0,
     );
     let mut sk = skeleton();
-    anim.apply(&mut sk, 0.0, 2.25, true, None, &opts(1.0, MixFrom::Setup));
+    anim.apply(
+        &mut sk.borrow(),
+        0.0,
+        2.25,
+        true,
+        None,
+        &opts(1.0, MixFrom::Setup),
+    );
     approx(sk.bone(BoneId(0)).pose.local.rotation, 10.0 + 25.0);
-    anim.apply(&mut sk, 0.0, 2.25, false, None, &opts(1.0, MixFrom::Setup));
+    anim.apply(
+        &mut sk.borrow(),
+        0.0,
+        2.25,
+        false,
+        None,
+        &opts(1.0, MixFrom::Setup),
+    );
     approx(sk.bone(BoneId(0)).pose.local.rotation, 10.0 + 100.0); // clamps to the last key
 }
 

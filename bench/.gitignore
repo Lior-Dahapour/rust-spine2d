@@ -1,0 +1,3 @@
+# Spine example art, filled by setup-assets.sh; never commit it.
+/assets/
+__pycache__/

@@ -34,7 +34,7 @@ use super::{
     PhysicsConstraintResetTimeline, PropertyId, SequenceTimeline, TransformConstraintTimeline,
 };
 use crate::event::Event;
-use crate::skeleton::Skeleton;
+use crate::skeleton::BorrowedSkeleton;
 use smallvec::SmallVec;
 use std::sync::Arc;
 
@@ -218,28 +218,29 @@ impl Timeline {
     /// frame 0. Fired events are appended to `events`, which may be `None` to ignore them.
     pub fn apply(
         &self,
-        skeleton: &mut Skeleton,
+        skeleton: &mut BorrowedSkeleton,
         last_time: f32,
         time: f32,
         events: Option<&mut Vec<Arc<Event>>>,
         options: &ApplyOptions,
     ) {
+        let (skeleton, skeleton_data) = skeleton.parts();
         match self {
-            Timeline::Bone1(t) => t.apply(skeleton, time, options),
-            Timeline::Bone2(t) => t.apply(skeleton, time, options),
-            Timeline::Inherit(t) => t.apply(skeleton, time, options),
-            Timeline::Color(t) => t.apply(skeleton, time, options),
-            Timeline::Alpha(t) => t.apply(skeleton, time, options),
-            Timeline::Attachment(t) => t.apply(skeleton, time, options),
+            Timeline::Bone1(t) => t.apply(skeleton, skeleton_data, time, options),
+            Timeline::Bone2(t) => t.apply(skeleton, skeleton_data, time, options),
+            Timeline::Inherit(t) => t.apply(skeleton, skeleton_data, time, options),
+            Timeline::Color(t) => t.apply(skeleton, skeleton_data, time, options),
+            Timeline::Alpha(t) => t.apply(skeleton, skeleton_data, time, options),
+            Timeline::Attachment(t) => t.apply(skeleton, skeleton_data, time, options),
             Timeline::Deform(t) => t.apply(skeleton, time, options),
             Timeline::Sequence(t) => t.apply(skeleton, time, options),
             Timeline::DrawOrder(t) => t.apply(skeleton, time, options),
             Timeline::DrawOrderFolder(t) => t.apply(skeleton, time, options),
             Timeline::Event(t) => t.apply(last_time, time, events),
-            Timeline::Ik(t) => t.apply(skeleton, time, options),
-            Timeline::Transform(t) => t.apply(skeleton, time, options),
-            Timeline::PathMix(t) => t.apply(skeleton, time, options),
-            Timeline::Constraint1(t) => t.apply(skeleton, time, options),
+            Timeline::Ik(t) => t.apply(skeleton, skeleton_data, time, options),
+            Timeline::Transform(t) => t.apply(skeleton, skeleton_data, time, options),
+            Timeline::PathMix(t) => t.apply(skeleton, skeleton_data, time, options),
+            Timeline::Constraint1(t) => t.apply(skeleton, skeleton_data, time, options),
             Timeline::PhysicsReset(t) => t.apply(skeleton, last_time, time),
         }
     }

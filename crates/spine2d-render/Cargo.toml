@@ -12,3 +12,7 @@ spine2d-core = { path = "../spine2d-core" }
 [dev-dependencies]
 serde_json = { version = "1", features = ["preserve_order", "arbitrary_precision"] }
 ctor = "1.0.13"
+
+[features]
+# Makes `as_borrow_ref` public, for a runtime that keeps the skeleton data itself.
+external-data = ["spine2d-core/external-data"]

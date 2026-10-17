@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/spine2d-core", "crates/spine2d-render", "crates/spine2d-godot"]
+members = ["crates/spine2d-core", "crates/spine2d-render", "crates/spine2d-ecs", "crates/spine2d-godot"]
 
 [workspace.package]
 version = "0.1.0"

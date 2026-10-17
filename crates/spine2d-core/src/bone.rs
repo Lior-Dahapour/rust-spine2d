@@ -606,6 +606,13 @@ impl Bone {
         self.active
     }
 
+    /// Sets the flag [`Bone::is_active`] reports. The update loop does not read it: the skeleton
+    /// recomputes it from the skin in `update_cache`, so a value set here lasts only until the next
+    /// rebuild.
+    pub fn set_active(&mut self, active: bool) {
+        self.active = active;
+    }
+
     /// The pose to use for rendering: `pose`, or the constrained copy if constraints modify it.
     pub fn applied_pose(&self) -> &BonePose {
         match self.applied {

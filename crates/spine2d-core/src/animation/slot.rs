@@ -31,6 +31,7 @@ use super::curve::CurveTimeline;
 use super::{ApplyOptions, MixFrom, Property, PropertyId};
 use crate::color::Color;
 use crate::skeleton::Skeleton;
+use crate::skeleton_data::SkeletonData;
 use crate::slot::SlotPose;
 use smallvec::{smallvec, SmallVec};
 
@@ -103,12 +104,18 @@ impl ColorTimeline {
         }
     }
 
-    pub(crate) fn apply(&self, skeleton: &mut Skeleton, time: f32, o: &ApplyOptions) {
+    pub(crate) fn apply(
+        &self,
+        skeleton: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+        time: f32,
+        o: &ApplyOptions,
+    ) {
         let slot = &mut skeleton.slots[self.slot];
         if !skeleton.bones[slot.bone.0].active {
             return;
         }
-        let setup = &skeleton.data.slots[self.slot].setup_pose;
+        let setup = &skeleton_data.slots[self.slot].setup_pose;
         let pose = if o.applied_pose {
             slot.applied_pose_mut()
         } else {
@@ -323,12 +330,18 @@ impl AlphaTimeline {
         smallvec![Property::Alpha.id(self.slot)]
     }
 
-    pub(crate) fn apply(&self, skeleton: &mut Skeleton, time: f32, o: &ApplyOptions) {
+    pub(crate) fn apply(
+        &self,
+        skeleton: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+        time: f32,
+        o: &ApplyOptions,
+    ) {
         let slot = &mut skeleton.slots[self.slot];
         if !skeleton.bones[slot.bone.0].active {
             return;
         }
-        let setup_a = skeleton.data.slots[self.slot].setup_pose.color.a;
+        let setup_a = skeleton_data.slots[self.slot].setup_pose.color.a;
         let color = &mut (if o.applied_pose {
             slot.applied_pose_mut()
         } else {

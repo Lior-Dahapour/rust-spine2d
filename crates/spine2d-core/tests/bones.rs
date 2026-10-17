@@ -244,3 +244,54 @@ fn affine_conversion_matches_matrix() {
     approx(p.x, 1.0);
     approx(p.y, 3.0);
 }
+
+#[test]
+fn the_active_flag_of_a_bone_is_settable_and_rebuilt_by_update_cache() {
+    let mut sk = two_bone(BoneLocal::default(), BoneLocal::default());
+    assert!(sk.bone(BoneId(1)).is_active());
+
+    sk.bone_mut(BoneId(1)).set_active(false);
+    assert!(!sk.bone(BoneId(1)).is_active());
+
+    sk.update_cache();
+    assert!(sk.bone(BoneId(1)).is_active());
+}
+
+#[cfg(feature = "external-data")]
+#[test]
+fn updating_with_the_data_given_matches_updating_with_the_data_held() {
+    let root = BoneLocal {
+        rotation: 30.0,
+        ..BoneLocal::default()
+    };
+    let child = BoneLocal {
+        x: 10.0,
+        ..BoneLocal::default()
+    };
+    let mut held = two_bone(root, child);
+    let mut given = held.clone();
+    let data = Arc::clone(given.data());
+
+    held.update_world_transform(Physics::None);
+    given.as_borrow(&data).update_world_transform(Physics::None);
+
+    let held_pose = held.bone(BoneId(1)).applied_pose();
+    let given_pose = given.bone(BoneId(1)).applied_pose();
+    approx(held_pose.world_x, given_pose.world_x);
+    approx(held_pose.world_y, given_pose.world_y);
+    assert!(held_pose.world_x != 0.0, "the pose moved");
+}
+
+#[test]
+fn updating_and_applying_with_the_data_held_does_not_change_its_reference_count() {
+    let mut skeleton = two_bone(BoneLocal::default(), BoneLocal::default());
+    let mut state = AnimationState::new(Arc::new(AnimationStateData::new(Arc::clone(
+        skeleton.data(),
+    ))));
+    let before = Arc::strong_count(skeleton.data());
+
+    skeleton.update_world_transform(Physics::None);
+    state.apply(&mut skeleton.borrow());
+
+    assert_eq!(Arc::strong_count(skeleton.data()), before);
+}

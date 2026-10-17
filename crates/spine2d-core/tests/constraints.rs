@@ -165,3 +165,94 @@ fn physics_translate_does_not_panic_without_physics_constraints() {
     sk.physics_rotate(0.0, 0.0, 30.0);
     sk.update_world_transform(Physics::Update);
 }
+
+#[test]
+fn an_ik_constraint_can_be_retargeted() {
+    let mut data = SkeletonData::new();
+    data.bones = vec![
+        bone(0, "root", None, 0.0, 0.0, 0.0),
+        bone(1, "upper", Some(0), 0.0, 0.0, 100.0),
+        bone(2, "fore", Some(1), 100.0, 0.0, 100.0),
+        bone(3, "target", Some(0), 120.0, 80.0, 0.0),
+        bone(4, "other", Some(0), -90.0, 60.0, 0.0),
+    ];
+    let mut ik = IkConstraintData::new("ik");
+    ik.bones = vec![1, 2];
+    ik.target = 3;
+    ik.setup_pose.mix = 1.0;
+    ik.setup_pose.bend_direction = 1;
+    data.constraints = vec![ConstraintData::Ik(ik)];
+    let mut sk = Skeleton::new(Arc::new(data));
+
+    let ConstraintBody::Ik(constraint) = &mut sk.constraint_mut(0).body else {
+        unreachable!("the constraint is an IK constraint");
+    };
+    assert_eq!(constraint.target(), BoneId(3));
+    constraint.set_target(BoneId(4));
+    sk.update_cache();
+    sk.update_world_transform(Physics::None);
+
+    let (x, y) = tip(&sk);
+    approx(x, -90.0, 0.05);
+    approx(y, 60.0, 0.05);
+}
+
+#[test]
+fn constraint_bodies_report_and_change_what_they_refer_to() {
+    let mut data = SkeletonData::new();
+    data.bones = vec![
+        bone(0, "root", None, 0.0, 0.0, 0.0),
+        bone(1, "a", Some(0), 0.0, 0.0, 0.0),
+        bone(2, "b", Some(0), 0.0, 0.0, 0.0),
+    ];
+    let mut transform = TransformConstraintData::new("t");
+    transform.bones = vec![2];
+    transform.source = 1;
+    data.slots = vec![SlotData::new(0, "slot", BoneId(0))];
+    let mut path = PathConstraintData::new("p");
+    path.slot = 0;
+    let mut physics = PhysicsConstraintData::new("ph");
+    physics.bone = 1;
+    let mut slider = SliderData::new("s");
+    slider.bone = Some(1);
+    data.constraints = vec![
+        ConstraintData::Transform(transform),
+        ConstraintData::Path(path),
+        ConstraintData::Physics(physics),
+        ConstraintData::Slider(slider),
+    ];
+    let mut sk = Skeleton::new(Arc::new(data));
+
+    if let ConstraintBody::Transform(c) = &mut sk.constraint_mut(0).body {
+        assert_eq!(c.source(), BoneId(1));
+        c.set_source(BoneId(0));
+        assert_eq!(c.source(), BoneId(0));
+    }
+    if let ConstraintBody::Path(c) = &mut sk.constraint_mut(1).body {
+        assert_eq!(c.slot(), SlotId(0));
+        c.set_slot(SlotId(3));
+        assert_eq!(c.slot(), SlotId(3));
+    }
+    if let ConstraintBody::Physics(c) = &mut sk.constraint_mut(2).body {
+        assert_eq!(c.bone(), BoneId(1));
+        c.set_bone(BoneId(2));
+        assert_eq!(c.bone(), BoneId(2));
+    }
+    if let ConstraintBody::Slider(c) = &mut sk.constraint_mut(3).body {
+        assert_eq!(c.bone(), Some(BoneId(1)));
+        c.set_bone(None);
+        assert_eq!(c.bone(), None);
+    }
+}
+
+#[test]
+fn the_active_flag_is_settable_and_rebuilt_by_update_cache() {
+    let mut sk = ik_skeleton((120.0, 80.0), 1.0);
+    assert!(sk.constraint(0).is_active());
+
+    sk.constraint_mut(0).set_active(false);
+    assert!(!sk.constraint(0).is_active());
+
+    sk.update_cache();
+    assert!(sk.constraint(0).is_active());
+}

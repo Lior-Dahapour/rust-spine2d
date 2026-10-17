@@ -32,6 +32,7 @@ use super::{search, search_step, ApplyOptions, MixFrom, Property, PropertyId};
 use crate::attachment::{Attachment, VertexAttachment};
 use crate::sequence::SequenceMode;
 use crate::skeleton::Skeleton;
+use crate::skeleton_data::SkeletonData;
 use crate::slot::SlotPose;
 use smallvec::{smallvec, SmallVec};
 use smol_str::SmolStr;
@@ -64,7 +65,13 @@ impl AttachmentTimeline {
         smallvec![Property::Attachment.id(self.slot)]
     }
 
-    pub(crate) fn apply(&self, skeleton: &mut Skeleton, time: f32, o: &ApplyOptions) {
+    pub(crate) fn apply(
+        &self,
+        skeleton: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+        time: f32,
+        o: &ApplyOptions,
+    ) {
         if !skeleton.bones[skeleton.slots[self.slot].bone.0].active {
             return;
         }
@@ -72,9 +79,14 @@ impl AttachmentTimeline {
             if o.from == MixFrom::Current {
                 return;
             }
-            skeleton.attachment_by_index(self.slot, &skeleton.data.slots[self.slot].attachment_name)
+            skeleton.find_attachment(
+                skeleton_data,
+                self.slot,
+                &skeleton_data.slots[self.slot].attachment_name,
+            )
         } else {
-            skeleton.attachment_by_index(
+            skeleton.find_attachment(
+                skeleton_data,
                 self.slot,
                 &self.attachment_names[search(&self.frames, time)],
             )

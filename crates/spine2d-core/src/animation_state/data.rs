@@ -32,33 +32,80 @@ use rustc_hash::FxHashMap;
 use smol_str::SmolStr;
 use std::sync::Arc;
 
+/// What a method panics with when it needs the data a detached one does not hold.
+const DETACHED: &str =
+    "these mix settings hold no data; use the `_with` methods (see `AnimationStateData::detached`)";
+
 /// Stores mix (crossfade) durations to be applied when `AnimationState` animations are changed.
 #[derive(Clone, Debug)]
 pub struct AnimationStateData {
-    skeleton_data: Arc<SkeletonData>,
+    /// `None` for a [`AnimationStateData::detached`] one, and while `set_mix` has it moved out.
+    skeleton_data: Option<Arc<SkeletonData>>,
     /// The mix duration used when no specific mix is set for a pair of animations.
     pub default_mix: f32,
     mixes: FxHashMap<SmolStr, FxHashMap<SmolStr, f32>>,
 }
 
 impl AnimationStateData {
+    /// Mix settings that hold a share of `skeleton_data`. This is the one to use, unless you are
+    /// building a runtime: see `AnimationStateData::detached`, which needs the `external-data`
+    /// feature.
     pub fn new(skeleton_data: Arc<SkeletonData>) -> Self {
         AnimationStateData {
-            skeleton_data,
+            skeleton_data: Some(skeleton_data),
             default_mix: 0.0,
             mixes: FxHashMap::default(),
         }
     }
 
+    /// Mix settings that hold no [`SkeletonData`]: whoever calls it keeps the data and passes it
+    /// to `set_mix_with`.
+    ///
+    /// Needs the `external-data` feature.
+    ///
+    /// **This is for building a runtime or something similar**, where the data lives in one place
+    /// and many skeletons use it. Anyone else should use [`AnimationStateData::new`], which holds
+    /// its data and needs none of this. The methods without `_with`, and
+    /// [`AnimationStateData::skeleton_data`], panic on a detached one because they have no data to
+    /// read, so always pass the same data the skeleton was made from. To start an animation by
+    /// name, find it in the data ([`SkeletonData::find_animation`]) and pass it to
+    /// `AnimationState::set_animation`.
+    #[cfg_attr(not(feature = "external-data"), visibility::make(pub(crate)))]
+    #[cfg_attr(not(feature = "external-data"), allow(dead_code))]
+    pub fn detached() -> Self {
+        AnimationStateData {
+            skeleton_data: None,
+            default_mix: 0.0,
+            mixes: FxHashMap::default(),
+        }
+    }
+
+    /// The data these settings hold. Panics for a detached one (the `external-data` feature).
     pub fn skeleton_data(&self) -> &Arc<SkeletonData> {
-        &self.skeleton_data
+        self.skeleton_data.as_ref().expect(DETACHED)
     }
 
     /// Sets the mix duration when changing from `from` to `to` animation. Returns false if
     /// either animation does not exist.
     pub fn set_mix(&mut self, from: &str, to: &str, duration: f32) -> bool {
-        if self.skeleton_data.find_animation(from).is_none()
-            || self.skeleton_data.find_animation(to).is_none()
+        // The data is moved out and back, because `set_mix_with` needs `&mut self` and the data.
+        let skeleton_data = self.skeleton_data.take().expect(DETACHED);
+        let set = self.set_mix_with(&skeleton_data, from, to, duration);
+        self.skeleton_data = Some(skeleton_data);
+        set
+    }
+
+    /// Like [`AnimationStateData::set_mix`], with the data given instead of held.
+    #[cfg_attr(not(feature = "external-data"), visibility::make(pub(crate)))]
+    pub fn set_mix_with(
+        &mut self,
+        skeleton_data: &SkeletonData,
+        from: &str,
+        to: &str,
+        duration: f32,
+    ) -> bool {
+        if skeleton_data.find_animation(from).is_none()
+            || skeleton_data.find_animation(to).is_none()
         {
             return false;
         }

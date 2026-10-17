@@ -29,9 +29,10 @@ examples from your own checkout of
 |---|---|
 | [`spine2d-core`](crates/spine2d-core) | The runtime: skeletons, skins, attachments, all timelines, `AnimationState`, atlas parser, JSON and binary loaders, and the IK, transform, path, physics and slider constraints. No engine dependency. |
 | [`spine2d-render`](crates/spine2d-render) | Turns a posed skeleton into batched draw data, with clipping, blend modes, two-color tint and bounding boxes. |
+| [`spine2d-ecs`](crates/spine2d-ecs) | Engine-independent systems on `bevy_ecs`: components and the generic systems that animate, pose and drive skeletons, over a `SpineResource` trait that says where the skeleton data lives. The Godot extension runs on it. |
 | [`spine2d-godot`](crates/spine2d-godot) | Godot 4.5+ extension with a `SpineSprite` node. See its [README](crates/spine2d-godot/README.md). |
 
-A Bevy integration is planned but not started.
+A Bevy plugin on top of `spine2d-ecs` is not published yet.
 
 ## Platforms
 
@@ -94,10 +95,10 @@ let mut renderer = SkeletonRenderer::new();
 loop {
     skeleton.update_time(delta);
     state.update(delta);
-    state.apply(&mut skeleton);
+    state.apply(&mut skeleton.borrow());
     skeleton.update_world_transform(Physics::Update);
 
-    for command in renderer.render(&skeleton) {
+    for command in renderer.render(&skeleton.borrow_ref()) {
         // One draw call: positions, uvs, colors, indices, blend_mode, texture.
     }
 }
@@ -109,6 +110,18 @@ A complete example is
 ```sh
 cargo run --release -p spine2d-render --example quickstart -- hero.json hero.atlas run
 ```
+
+A `Skeleton` owns an `Arc` of its data. `skeleton.borrow()` (exclusive) and `skeleton.borrow_ref()`
+(shared) give the views the renderer and the animation state work on, and `Skeleton` keeps the
+usual methods (`find_bone`, `update_world_transform`, `set_skin`, ...) as shortcuts to them.
+
+With the `external-data` feature of `spine2d-core` (and `spine2d-render`), the data does not have
+to live inside the skeleton: `Skeleton::detached(&data)` builds one that holds none, and
+`as_borrow(&data)` / `as_borrow_ref(&data)` take it from wherever you keep it, for example a slot
+map shared by many skeletons in an ECS world. `AnimationState::detached()` and
+`as_borrow(&mix_table, &data)` do the same for the state. Using a detached skeleton or state
+through `borrow()` or its own methods panics with a message that points to `as_borrow`; always
+pass the data the skeleton was made from.
 
 Bones, slots and track entries are identified by handles (`BoneId`, `SlotId`, `EntryId`) instead of
 references. The world is y-down, as in Spine 4.3; call `spine2d_core::set_y_down(false)` for y-up.
@@ -221,7 +234,7 @@ Render crate (draw data, bounds with clipping, and a bounding box hit test), the
 
 These are one machine and a throwaway benchmark script, so read differences of a few percent as
 noise. A repeatable frame-time comparison of the Godot extension with the official plugin is in
-[`godot-bench`](godot-bench).
+[`godot-bench`](bench/godot-bench).
 
 ## Credits
 
@@ -229,5 +242,8 @@ Thanks to [Esoteric Software](https://esotericsoftware.com) for Spine and the of
 and to the authors of [glam](https://crates.io/crates/glam),
 [smallvec](https://crates.io/crates/smallvec), [smol_str](https://crates.io/crates/smol_str),
 [slotmap](https://crates.io/crates/slotmap), [rustc-hash](https://crates.io/crates/rustc-hash),
-[serde_json](https://crates.io/crates/serde_json), [bytemuck](https://crates.io/crates/bytemuck) and
-[godot-rust](https://github.com/godot-rust/gdext).
+[serde_json](https://crates.io/crates/serde_json), [bytemuck](https://crates.io/crates/bytemuck),
+[crossbeam-channel](https://crates.io/crates/crossbeam-channel),
+[tracing](https://crates.io/crates/tracing), [thiserror](https://crates.io/crates/thiserror),
+[Bevy](https://bevyengine.org) (`bevy_ecs`, `bevy_time` and `bevy_derive`, which the ECS layer is
+built on) and [godot-rust](https://github.com/godot-rust/gdext).

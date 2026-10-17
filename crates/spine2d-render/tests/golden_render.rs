@@ -66,7 +66,7 @@ fn hit(h: Option<&Arc<spine2d_core::attachment::Attachment>>) -> String {
 
 /// Merges `render_batches` output by hand, the way a backend writing its own buffers would.
 fn merge_groups(renderer: &mut SkeletonRenderer, sk: &Skeleton) -> Vec<RenderCommand> {
-    let batches = renderer.render_batches(sk);
+    let batches = renderer.render_batches(&sk.borrow_ref());
     batches
         .groups
         .iter()
@@ -123,7 +123,7 @@ fn check_frame(
         }
     };
     let grouped = merge_groups(renderer, sk);
-    let cmds = renderer.render(sk);
+    let cmds = renderer.render(&sk.borrow_ref());
     err(
         "groups merge to render()",
         format!("{grouped:?}"),
@@ -286,7 +286,7 @@ fn check(
         );
         sk.update_time(DT);
         state.update(DT);
-        state.apply(&mut sk);
+        state.apply(&mut sk.borrow());
         sk.update_world_transform(if i == 0 {
             Physics::Reset
         } else {

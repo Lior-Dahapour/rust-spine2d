@@ -34,8 +34,10 @@ func _ready() -> void:
 	check("reported off screen", not s.is_on_screen())
 	var uploads = s.get_mesh_stats().vertex_uploads
 	var time_before: float = s.get_current(0).get_track_time()
+	var ticks_before := Time.get_ticks_msec()
 	await frames(30)
-	check("animation keeps running while culled", s.get_current(0).get_track_time() > time_before + 0.2)
+	var elapsed := (Time.get_ticks_msec() - ticks_before) / 1000.0
+	check("animation keeps running while culled", s.get_current(0).get_track_time() - time_before > elapsed * 0.5)
 	check("no uploads while culled", s.get_mesh_stats().vertex_uploads == uploads)
 
 	s.position = Vector2(450, 600)

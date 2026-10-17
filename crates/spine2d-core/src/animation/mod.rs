@@ -59,7 +59,7 @@ pub use timeline::Timeline;
 use crate::color::Color;
 use crate::event::Event;
 use crate::math::fmod;
-use crate::skeleton::Skeleton;
+use crate::skeleton::BorrowedSkeleton;
 use rustc_hash::FxHashSet;
 use smol_str::SmolStr;
 use std::sync::Arc;
@@ -280,7 +280,7 @@ impl Animation {
     /// appended to `events`.
     pub fn apply(
         &self,
-        skeleton: &mut Skeleton,
+        skeleton: &mut BorrowedSkeleton,
         mut last_time: f32,
         mut time: f32,
         loop_: bool,

@@ -32,6 +32,7 @@ use super::{search, ApplyOptions, MixFrom, Property, PropertyId};
 use crate::constraint::ConstraintBody;
 use crate::constraint_data::{ConstraintData, PhysicsConstraintData, PhysicsConstraintPose};
 use crate::skeleton::Skeleton;
+use crate::skeleton_data::SkeletonData;
 use smallvec::{smallvec, SmallVec};
 
 /// Property id for a constraint index; `None` (all physics constraints) is -1 in the reference,
@@ -85,8 +86,14 @@ impl IkConstraintTimeline {
         smallvec![Property::IkConstraint.id(self.constraint)]
     }
 
-    pub(crate) fn apply(&self, sk: &mut Skeleton, time: f32, o: &ApplyOptions) {
-        let ConstraintData::Ik(data) = &sk.data.constraints[self.constraint] else {
+    pub(crate) fn apply(
+        &self,
+        sk: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+        time: f32,
+        o: &ApplyOptions,
+    ) {
+        let ConstraintData::Ik(data) = &skeleton_data.constraints[self.constraint] else {
             return;
         };
         let constraint = &mut sk.constraints[self.constraint];
@@ -180,8 +187,14 @@ impl TransformConstraintTimeline {
         smallvec![Property::TransformConstraint.id(self.constraint)]
     }
 
-    pub(crate) fn apply(&self, sk: &mut Skeleton, time: f32, o: &ApplyOptions) {
-        let ConstraintData::Transform(data) = &sk.data.constraints[self.constraint] else {
+    pub(crate) fn apply(
+        &self,
+        sk: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+        time: f32,
+        o: &ApplyOptions,
+    ) {
+        let ConstraintData::Transform(data) = &skeleton_data.constraints[self.constraint] else {
             return;
         };
         let constraint = &mut sk.constraints[self.constraint];
@@ -263,8 +276,14 @@ impl PathConstraintMixTimeline {
         smallvec![Property::PathConstraintMix.id(self.constraint)]
     }
 
-    pub(crate) fn apply(&self, sk: &mut Skeleton, time: f32, o: &ApplyOptions) {
-        let ConstraintData::Path(data) = &sk.data.constraints[self.constraint] else {
+    pub(crate) fn apply(
+        &self,
+        sk: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+        time: f32,
+        o: &ApplyOptions,
+    ) {
+        let ConstraintData::Path(data) = &skeleton_data.constraints[self.constraint] else {
             return;
         };
         let constraint = &mut sk.constraints[self.constraint];
@@ -440,7 +459,13 @@ impl ConstraintTimeline1 {
         )]
     }
 
-    pub(crate) fn apply(&self, sk: &mut Skeleton, time: f32, o: &ApplyOptions) {
+    pub(crate) fn apply(
+        &self,
+        sk: &mut Skeleton,
+        skeleton_data: &SkeletonData,
+        time: f32,
+        o: &ApplyOptions,
+    ) {
         use Constraint1Kind as K;
         let c = &self.curve;
         let (alpha, from) = (o.alpha, o.from);
@@ -457,7 +482,7 @@ impl ConstraintTimeline1 {
                         0.0
                     };
                     for i in 0..sk.constraints.len() {
-                        let ConstraintData::Physics(data) = &sk.data.constraints[i] else {
+                        let ConstraintData::Physics(data) = &skeleton_data.constraints[i] else {
                             continue;
                         };
                         let constraint = &mut sk.constraints[i];
@@ -480,7 +505,7 @@ impl ConstraintTimeline1 {
                     }
                 }
                 Some(i) => {
-                    let ConstraintData::Physics(data) = &sk.data.constraints[i] else {
+                    let ConstraintData::Physics(data) = &skeleton_data.constraints[i] else {
                         return;
                     };
                     let constraint = &mut sk.constraints[i];
@@ -511,7 +536,11 @@ impl ConstraintTimeline1 {
         if !constraint.active {
             return;
         }
-        match (self.kind, &mut constraint.body, &sk.data.constraints[i]) {
+        match (
+            self.kind,
+            &mut constraint.body,
+            &skeleton_data.constraints[i],
+        ) {
             (K::PathPosition, ConstraintBody::Path(pc), ConstraintData::Path(d)) => {
                 let pose = pc.pose.target(o.applied_pose);
                 pose.position =

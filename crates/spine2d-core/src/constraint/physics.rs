@@ -121,6 +121,16 @@ impl PhysicsConstraint {
         }
     }
 
+    /// The bone the simulation moves.
+    pub fn bone(&self) -> BoneId {
+        self.bone
+    }
+
+    /// Makes the simulation move `bone`. Call [`update_cache`](crate::skeleton::Borrowed::update_cache) afterwards.
+    pub fn set_bone(&mut self, bone: BoneId) {
+        self.bone = bone;
+    }
+
     /// Resets the simulation to the current pose.
     pub fn reset(&mut self, skeleton_time: f32) {
         self.state.reset(skeleton_time);

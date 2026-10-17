@@ -62,7 +62,7 @@ fn main() {
     let step = |skeleton: &mut Skeleton, state: &mut AnimationState| {
         skeleton.update_time(dt);
         state.update(dt);
-        state.apply(skeleton);
+        state.apply(&mut skeleton.borrow());
         skeleton.update_world_transform(Physics::Update);
     };
     for _ in 0..600 {

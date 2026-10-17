@@ -32,13 +32,13 @@ fn run_rust(data: &Arc<SkeletonData>, animation: &str) -> Vec<Frame> {
 
     state.set_animation(0, anim.clone(), true);
     state.update(0.016);
-    state.apply(&mut sk);
+    state.apply(&mut sk.borrow());
     sk.update_world_transform(Physics::Update);
 
     sk.setup_pose();
     state.clear_tracks();
     state.set_animation(0, anim.clone(), false);
-    state.apply(&mut sk);
+    state.apply(&mut sk.borrow());
     sk.update_world_transform(Physics::Update);
 
     let frame_count = (anim.duration * 60.0).ceil() as i32;
@@ -46,7 +46,7 @@ fn run_rust(data: &Arc<SkeletonData>, animation: &str) -> Vec<Frame> {
     for i in 0..=frame_count {
         if i > 0 {
             state.update(1.0 / 60.0);
-            state.apply(&mut sk);
+            state.apply(&mut sk.borrow());
             sk.update_world_transform(Physics::Update);
         }
         frames.push(dump(&sk));
